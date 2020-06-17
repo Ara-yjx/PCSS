@@ -292,6 +292,18 @@ void Shader::initShader(ShaderArg* arg = nullptr) {
     vector<unsigned int> indices;
     loadModel(DEFAULT_MODEL, vertices, indices);
 
+    // Add round
+    float ground[] = {
+         0.9, -0.3,  0.9, 0, 1, 0,
+         0.9, -0.3, -0.9, 0, 1, 0,
+        -0.9, -0.3,  0.9, 0, 1, 0,
+         0.9, -0.3, -0.9, 0, 1, 0,
+        -0.9, -0.3,  0.9, 0, 1, 0,
+        -0.9, -0.3, -0.9, 0, 1, 0
+    };
+    for(int i = 0; i < 36; i++)
+        vertices.push_back(ground[i]);
+    
 
     cerr<<"initQuad();"<<endl;
     initQuad();
