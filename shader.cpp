@@ -25,6 +25,8 @@ using Eigen::Vector3d;
 
 const string GEOM_VERT = "../geom.vert";
 const string GEOM_FRAG = "../geom.frag";
+const string BLEND_VERT = "../blend.vert";
+const string BLEND_FRAG = "../blend.frag";
 const string DISPLAY_VERT = "../display.vert";
 const string DISPLAY_FRAG = "../display.frag";
 const string DEFAULT_MODEL = "../models/xbox.obj";
@@ -159,7 +161,6 @@ BaseShader::BaseShader(string vert, string frag) {
 }
 
 
-
 GeomShader::GeomShader(string vert, string frag): BaseShader(vert, frag) {}
 
 
@@ -217,9 +218,10 @@ void GeomShader::init(vector<float> vertices, vector<unsigned int> indices) {
 }
 
 
-void GeomShader::render(float sceneRotation, float sceneScale) {
+void GeomShader::render(float sceneRotationY, float sceneRotationX) {
 
     glEnable(GL_DEPTH_TEST); 
+    glDepthFunc(GL_LESS);
     glBindFramebuffer(GL_FRAMEBUFFER, FBO);   
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -227,10 +229,10 @@ void GeomShader::render(float sceneRotation, float sceneScale) {
     glUseProgram(this->shaderProgram);
 
     // Set Uniform Params
-    // int sceneRotationLocation = glGetUniformLocation(this->shaderProgram, "sceneRotation");
-    // glUniform1f(sceneRotationLocation, sceneRotation);
-    // int sceneScaleLocation = glGetUniformLocation(this->shaderProgram, "sceneScale");
-    // glUniform1f(sceneScaleLocation, sceneScale);
+    int sceneRotationYLocation = glGetUniformLocation(this->shaderProgram, "sceneRotationY");
+    glUniform1f(sceneRotationYLocation, sceneRotationY);
+    int sceneRotationXLocation = glGetUniformLocation(this->shaderProgram, "sceneRotationX");
+    glUniform1f(sceneRotationXLocation, sceneRotationX);
 
     // Draw
     glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
@@ -272,7 +274,6 @@ void DisplayShader::render(unsigned int texture) {
 }
 
 
-
 void Shader::initShader(ShaderArg* arg = nullptr) {
 
     geomShader = new GeomShader(GEOM_VERT, GEOM_FRAG);
@@ -280,7 +281,7 @@ void Shader::initShader(ShaderArg* arg = nullptr) {
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-    // glDisable(GL_CULL_FACE);
+    glDisable(GL_CULL_FACE);
 
 
     ///////////////////////
@@ -294,11 +295,8 @@ void Shader::initShader(ShaderArg* arg = nullptr) {
 
     cerr<<"initQuad();"<<endl;
     initQuad();
-    
     cerr<<"geomShader->init(vertices, indices);"<<endl;
-    geomShader->init(vertices, indices);    
-    
-
+    geomShader->init(vertices, indices); 
     cerr<<"displayShader->init();"<<endl;
     displayShader->init();
 
@@ -310,8 +308,8 @@ void Shader::updateShader(ShaderArg* arg = nullptr) {
     // Compute params
     const float rotationRate = 0.3;
     float brightness = arg->sliderValue;
-    float sceneRotation = - arg->arrowXstate * rotationRate;
-    float sceneScale = pow(1.1, arg->arrowYstate);
+    float sceneRotationY = - arg->arrowXstate * rotationRate;
+    float sceneRotationX = arg->arrowYstate * rotationRate;
 
     if(arg) delete arg;
 
@@ -320,7 +318,7 @@ void Shader::updateShader(ShaderArg* arg = nullptr) {
 
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
-    geomShader->render(0,0);
+    geomShader->render(sceneRotationY, sceneRotationX);
     displayShader->render(geomShader->gNormal);
 
 }
