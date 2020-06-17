@@ -23,9 +23,9 @@ else()
   set(NANOGUI_USE_GLAD_DEFAULT OFF)
 endif()
 
-option(NANOGUI_BUILD_EXAMPLE "Build NanoGUI example application?" ON)
+option(NANOGUI_BUILD_EXAMPLE "Build NanoGUI example application?" OFF)
 option(NANOGUI_BUILD_SHARED  "Build NanoGUI as a shared library?" ON)
-option(NANOGUI_BUILD_PYTHON  "Build a Python plugin for NanoGUI?" ON)
+option(NANOGUI_BUILD_PYTHON  "Build a Python plugin for NanoGUI?" OFF)
 option(NANOGUI_USE_GLAD      "Use Glad OpenGL loader library?" ${NANOGUI_USE_GLAD_DEFAULT})
 option(NANOGUI_INSTALL       "Install NanoGUI on `make install`?" ON)
 
@@ -436,6 +436,13 @@ if(NANOGUI_BUILD_EXAMPLE)
   # Copy icons for example application
   file(COPY resources/icons DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 endif()
+
+
+# My program
+# add_library(stb_image STATIC include/stb_image.c include/stb_image_resize.c)
+add_executable(main main.cpp shader.h shader.cpp)
+target_link_libraries(main nanogui ${NANOGUI_EXTRA_LIBS})
+
 
 if (NANOGUI_BUILD_PYTHON)
   # Detect Python
