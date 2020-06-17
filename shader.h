@@ -71,12 +71,18 @@ public:
 
 class DisplayShader: public BaseShader {
 public:
-    unsigned int gBuffer;
-
     DisplayShader(std::string vert, std::string frag);
-
     void init();    
     void render(unsigned int texture);
+};
+
+
+class ShadowShader: public BaseShader {
+public:
+    ShadowShader(std::string vert, std::string frag);
+
+    void init();    
+    void render(unsigned int gPosition, unsigned int gShadowmap);
 };
 
 
@@ -91,7 +97,7 @@ public:
     GeomShader *geomShader;
     DisplayShader *displayShader;
     ShadowmapShader *shadowmapShader;
-
+    ShadowShader *shadowShader;
 };
 
 

@@ -31,6 +31,8 @@ const string SHADOWMAP_FRAG = "../shadowmap.frag";
 // const string BLEND_FRAG = "../blend.frag";
 const string DISPLAY_VERT = "../display.vert";
 const string DISPLAY_FRAG = "../display.frag";
+const string SHADOW_VERT = "../shadow.vert";
+const string SHADOW_FRAG = "../shadow.frag";
 const string DEFAULT_MODEL = "../models/xbox.obj";
 const float PI = 3.14159265358979f;
 
@@ -265,10 +267,10 @@ void DisplayShader::render(unsigned int texture) {
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);   
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);   
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     
     glBindVertexArray(QUAD_VAO);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
@@ -342,10 +344,48 @@ void ShadowmapShader::render() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
+
+ShadowShader::ShadowShader(string vert, string frag): BaseShader(vert, frag) {}
+
+
+void ShadowShader::init() {}
+
+
+void ShadowShader::render(unsigned int gPosition, unsigned int gShadowmap) {
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glDisable(GL_DEPTH_TEST);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    // glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+
+    glUseProgram(shaderProgram);
+    glUniform1i(glGetUniformLocation(shaderProgram, "gPosition"), 0);
+    glUniform1i(glGetUniformLocation(shaderProgram, "gShadowmap"), 1);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, gPosition);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);   
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, gShadowmap);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);   
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    
+    glBindVertexArray(QUAD_VAO);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glBindVertexArray(0);
+}
+
+
 void Shader::initShader(ShaderArg* arg = nullptr) {
 
     geomShader = new GeomShader(GEOM_VERT, GEOM_FRAG);
     shadowmapShader = new ShadowmapShader(SHADOWMAP_VERT, SHADOWMAP_FRAG);
+    shadowShader = new ShadowShader(SHADOW_VERT, SHADOW_FRAG);
     displayShader = new DisplayShader(DISPLAY_VERT, DISPLAY_FRAG);
 
     glEnable(GL_DEPTH_TEST);
@@ -403,7 +443,8 @@ void Shader::updateShader(ShaderArg* arg = nullptr) {
 
     geomShader->render(sceneRotationY, sceneRotationX);
     shadowmapShader->render();
-    displayShader->render(shadowmapShader->gDepth);
+    // displayShader->render(shadowmapShader->gDepth);
+    shadowShader->render(geomShader->gPosition, shadowmapShader->gDepth);
 
 }
 

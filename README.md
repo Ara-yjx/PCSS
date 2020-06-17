@@ -16,13 +16,13 @@
 
     Geometry -> Shadowmap(light)
 
-3. ShadowShader
+3. ShadowShader (deferred)
 
     Generate shadow/blockers (cam)
 
-    Shadowmap[tex], Position(cam) -> Shadow(cam)
+    Shadowmap(light), Position(cam) -> Shadow(cam)
 
-4. FilterShader
+4. FilterShader (deferred)
 
     Search for blockers to decide filter size and then apply filter
 

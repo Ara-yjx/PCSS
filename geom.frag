@@ -11,5 +11,5 @@ layout (location = 1) out vec4 gNormal;
 void main()
 { 
     gPosition = vec4(Position, 1.0);
-    gNormal = vec4(Normal, 1.0);
+    gNormal = vec4(Normal, 0.0);
 }

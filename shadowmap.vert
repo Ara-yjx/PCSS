@@ -6,11 +6,9 @@ layout (location = 1) in vec3 in_Normal;
 layout (location = 0) out float Depth;
 
 
-void main()
-{   
-    vec3 lightPosition = vec3(0,2,0);
+mat4 projection() {
 
-    vec4 homoPos = vec4(in_Position, 1.0);
+    vec3 lightPosition = vec3(0,2,0);
 
     mat4 centerLight = mat4(
         1,0,0,0,
@@ -26,7 +24,6 @@ void main()
         0,1,0,0,
         0,0,0,1
     );
-
 
     // Persp projection: frustum [-1,1]^2 * [1,10]
     float n = 1;
@@ -47,8 +44,19 @@ void main()
     );
 
     mat4 mvp = ortho * persp * rotateLight * centerLight;
-    gl_Position = mvp * homoPos;
+    return mvp;
+}
 
+
+void main(){   
+
+    vec4 homoPos = vec4(in_Position, 1.0);
+   
+    homoPos = projection() * homoPos;
+
+    homoPos = homoPos / homoPos.w;
+
+    gl_Position = homoPos;
 
     Depth = gl_Position.z;
     

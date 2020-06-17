@@ -10,12 +10,9 @@ uniform float sceneRotationX;
 uniform float sceneRotationY;
 
 
-
-void main()
-{   
+mat4 projection() {
     float camZ = -2;
 
-    vec4 homoPos = vec4(in_Position, 1.0);
 
     mat4 rotationY = mat4(
         cos(sceneRotationY), 0, sin(sceneRotationY),0,
@@ -58,7 +55,14 @@ void main()
     );
 
     mat4 mvp = ortho * persp * view * rotationX * rotationY;
-    gl_Position = mvp * homoPos;
+    return mvp;
+}
+
+void main()
+{   
+    vec4 homoPos = vec4(in_Position, 1.0);
+
+    gl_Position = projection() * homoPos;
 
 
     Position = in_Position; 
