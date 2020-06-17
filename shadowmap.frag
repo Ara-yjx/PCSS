@@ -1,10 +1,11 @@
 #version 410 core
-in vec2 TexCoords;
 
-out vec4 FragColor;
-uniform sampler2D tex;
+layout (location = 0) in float Depth;
+
+layout (location = 0) out vec4 gDepth;
 
 
-void main() {
-    FragColor = texture(tex, TexCoords);
+void main()
+{ 
+    gDepth = vec4(vec3(Depth), 1);
 }

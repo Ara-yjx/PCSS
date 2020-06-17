@@ -43,7 +43,7 @@ class GeomShader: public BaseShader {
 public:
     std::vector<float> vertices;
     // std::vector<unsigned int> indices;
-    const static size_t stride = 6;
+    // const static size_t stride = 6;
     unsigned int VAO, VBO, FBO, RBO;
     unsigned int gPosition, gNormal;
 
@@ -54,6 +54,19 @@ public:
 };
 
 
+
+class ShadowmapShader: public BaseShader {
+public:
+    std::vector<float> vertices;
+    // const static size_t stride = 6;
+    unsigned int VAO, VBO, FBO, RBO;
+    unsigned int gDepth;
+
+    ShadowmapShader(std::string vert, std::string frag);
+
+    void init(std::vector<float> vertices);
+    void render();
+};
 
 
 class DisplayShader: public BaseShader {
@@ -77,6 +90,7 @@ public:
 
     GeomShader *geomShader;
     DisplayShader *displayShader;
+    ShadowmapShader *shadowmapShader;
 
 };
 

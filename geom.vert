@@ -8,7 +8,6 @@ layout (location = 1) out vec3 Normal;
 
 uniform float sceneRotationX;
 uniform float sceneRotationY;
-// uniform float sceneScale;
 
 
 
@@ -19,15 +18,15 @@ void main()
     vec4 homoPos = vec4(in_Position, 1.0);
 
     mat4 rotationY = mat4(
-        cos(sceneRotationY), 0, -sin(sceneRotationY),0,
+        cos(sceneRotationY), 0, sin(sceneRotationY),0,
         0,1,0,0,
-        sin(sceneRotationY), 0, cos(sceneRotationY),0,
+        -sin(sceneRotationY), 0, cos(sceneRotationY),0,
         0,0,0,1
     );
     mat4 rotationX = mat4(
-        cos(sceneRotationX), -sin(sceneRotationX),0,0,
-        sin(sceneRotationX), cos(sceneRotationX),0,0,
-        0,0,1,0,
+        1,0,0,0,
+        0,cos(sceneRotationX), -sin(sceneRotationX),0,
+        0,sin(sceneRotationX), cos(sceneRotationX),0,
         0,0,0,1
     );
 
@@ -58,7 +57,7 @@ void main()
         0,0,0,1
     );
 
-    mat4 mvp = ortho * persp * view * rotationY * rotationX;
+    mat4 mvp = ortho * persp * view * rotationX * rotationY;
     gl_Position = mvp * homoPos;
 
 

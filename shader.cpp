@@ -25,8 +25,10 @@ using Eigen::Vector3d;
 
 const string GEOM_VERT = "../geom.vert";
 const string GEOM_FRAG = "../geom.frag";
-const string BLEND_VERT = "../blend.vert";
-const string BLEND_FRAG = "../blend.frag";
+const string SHADOWMAP_VERT = "../shadowmap.vert";
+const string SHADOWMAP_FRAG = "../shadowmap.frag";
+// const string BLEND_VERT = "../blend.vert";
+// const string BLEND_FRAG = "../blend.frag";
 const string DISPLAY_VERT = "../display.vert";
 const string DISPLAY_FRAG = "../display.frag";
 const string DEFAULT_MODEL = "../models/xbox.obj";
@@ -274,9 +276,76 @@ void DisplayShader::render(unsigned int texture) {
 }
 
 
+ShadowmapShader::ShadowmapShader(string vert, string frag): BaseShader(vert, frag) {};
+
+
+void ShadowmapShader::init(vector<float> vertices) {
+    this->vertices = vertices;
+
+    // VBO
+    glGenBuffers(1, &(this->VBO)); // create a buffer object with ID
+    glBindBuffer(GL_ARRAY_BUFFER, this->VBO); // let the buffer be a VBO buffer 
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), (void*)vertices.data(), GL_STATIC_DRAW); // copy vertices to this buffer
+    
+    // VAO
+    glGenVertexArrays(1, &this->VAO);
+    glBindVertexArray(VAO);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0); // position
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(sizeof(float) * 3)); // normal
+    glEnableVertexAttribArray(1);
+
+    // FBO
+    glGenFramebuffers(1, &this->FBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+
+    glGenTextures(1, &gDepth);
+    glBindTexture(GL_TEXTURE_2D, gDepth);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, 768, 768, 0, GL_RGB, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gDepth, 0);
+
+    unsigned int attachments[] = { GL_COLOR_ATTACHMENT0 };
+    glDrawBuffers(1, attachments);
+
+    // RBO (depth & stencil buffer)
+    glGenRenderbuffers(1, &RBO);
+    glBindRenderbuffer(GL_RENDERBUFFER, RBO);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 768, 768);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RBO);
+
+    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        cout << "ERROR Framebuffer error." << endl;
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+
+void ShadowmapShader::render() {
+    glEnable(GL_DEPTH_TEST); 
+    glDepthFunc(GL_LESS);
+    glBindFramebuffer(GL_FRAMEBUFFER, FBO);   
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    glUseProgram(this->shaderProgram);
+
+    // Draw
+    glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
+    glBindVertexArray(VAO);
+    glDrawArrays(GL_TRIANGLES, 0, vertices.size()); // draw triangles without EBO
+
+    glBindVertexArray(0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
 void Shader::initShader(ShaderArg* arg = nullptr) {
 
     geomShader = new GeomShader(GEOM_VERT, GEOM_FRAG);
+    shadowmapShader = new ShadowmapShader(SHADOWMAP_VERT, SHADOWMAP_FRAG);
     displayShader = new DisplayShader(DISPLAY_VERT, DISPLAY_FRAG);
 
     glEnable(GL_DEPTH_TEST);
@@ -309,6 +378,8 @@ void Shader::initShader(ShaderArg* arg = nullptr) {
     initQuad();
     cerr<<"geomShader->init(vertices, indices);"<<endl;
     geomShader->init(vertices, indices); 
+    cerr<<"shadowmapShader->init();"<<endl;
+    shadowmapShader->init(vertices);
     cerr<<"displayShader->init();"<<endl;
     displayShader->init();
 
@@ -331,7 +402,8 @@ void Shader::updateShader(ShaderArg* arg = nullptr) {
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
     geomShader->render(sceneRotationY, sceneRotationX);
-    displayShader->render(geomShader->gNormal);
+    shadowmapShader->render();
+    displayShader->render(shadowmapShader->gDepth);
 
 }
 
