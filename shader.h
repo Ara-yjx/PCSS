@@ -60,7 +60,7 @@ public:
     std::vector<float> vertices;
     // const static size_t stride = 6;
     unsigned int VAO, VBO, FBO, RBO;
-    unsigned int gDepth;
+    unsigned int gDepth, gDepth2;
 
     ShadowmapShader(std::string vert, std::string frag);
 
@@ -75,7 +75,7 @@ public:
     unsigned int gShadow;
     ShadowShader(std::string vert, std::string frag);
     void init();    
-    void render(unsigned int gPosition, unsigned int gShadowmap);
+    void render(unsigned int gPosition, unsigned int gShadowmap, unsigned int gShadowmap2);
 };
 
 

@@ -267,14 +267,14 @@ void DisplayShader::render(unsigned int texture) {
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);   
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTextureParameteri(texture, GL_TEXTURE_BASE_LEVEL, 0);
-    glTextureParameteri(texture, GL_TEXTURE_MAX_LEVEL, 10);
-    glGenerateMipmap(GL_TEXTURE_2D);
+    // glTextureParameteri(texture, GL_TEXTURE_BASE_LEVEL, 0);
+    // glTextureParameteri(texture, GL_TEXTURE_MAX_LEVEL, 10);
+    // glGenerateMipmap(GL_TEXTURE_2D);
     
     glBindVertexArray(QUAD_VAO);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
@@ -310,12 +310,21 @@ void ShadowmapShader::init(vector<float> vertices) {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, 768, 768, 0, GL_RGB, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gDepth, 0);
 
-    unsigned int attachments[] = { GL_COLOR_ATTACHMENT0 };
-    glDrawBuffers(1, attachments);
+    glGenTextures(1, &gDepth2);
+    glBindTexture(GL_TEXTURE_2D, gDepth2);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, 768, 768, 0, GL_RGB, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gDepth2, 0);
+
+    unsigned int attachments[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+    glDrawBuffers(2, attachments);
 
     // RBO (depth & stencil buffer)
     glGenRenderbuffers(1, &RBO);
@@ -381,7 +390,7 @@ void ShadowShader::init() {
 }
 
 
-void ShadowShader::render(unsigned int gPosition, unsigned int gDepth) {
+void ShadowShader::render(unsigned int gPosition, unsigned int gDepth, unsigned int gDepth2) {
     glBindFramebuffer(GL_FRAMEBUFFER, this->FBO);
     glDisable(GL_DEPTH_TEST);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -390,6 +399,7 @@ void ShadowShader::render(unsigned int gPosition, unsigned int gDepth) {
     glUseProgram(shaderProgram);
     glUniform1i(glGetUniformLocation(shaderProgram, "gPosition"), 0);
     glUniform1i(glGetUniformLocation(shaderProgram, "gDepth"), 1);
+    glUniform1i(glGetUniformLocation(shaderProgram, "gDepth2"), 2);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, gPosition);
@@ -400,7 +410,7 @@ void ShadowShader::render(unsigned int gPosition, unsigned int gDepth) {
     
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, gDepth);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR); // set min_filter to mipmap to enable mipmap
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);   
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -408,6 +418,15 @@ void ShadowShader::render(unsigned int gPosition, unsigned int gDepth) {
     glTextureParameteri(gDepth, GL_TEXTURE_MAX_LEVEL, 10);
     glGenerateMipmap(GL_TEXTURE_2D);
 
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, gDepth2);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR); // set min_filter to mipmap to enable mipmap
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);   
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTextureParameteri(gDepth, GL_TEXTURE_BASE_LEVEL, 0);
+    glTextureParameteri(gDepth, GL_TEXTURE_MAX_LEVEL, 10);
+    glGenerateMipmap(GL_TEXTURE_2D);
 
     glBindVertexArray(QUAD_VAO);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
@@ -481,7 +500,7 @@ void Shader::updateShader(ShaderArg* arg = nullptr) {
 
     geomShader->render(sceneRotationY, sceneRotationX);
     shadowmapShader->render();
-    shadowShader->render(geomShader->gPosition, shadowmapShader->gDepth);
+    shadowShader->render(geomShader->gPosition, shadowmapShader->gDepth, shadowmapShader->gDepth2);
     displayShader->render(shadowShader->gShadow);
 
 }
