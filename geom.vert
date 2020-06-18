@@ -10,6 +10,7 @@ uniform float sceneRotationX;
 uniform float sceneRotationY;
 
 
+// Scene projection, different from Light projection
 mat4 projection() {
     float camZ = -2;
 

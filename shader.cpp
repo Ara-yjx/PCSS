@@ -348,11 +348,37 @@ void ShadowmapShader::render() {
 ShadowShader::ShadowShader(string vert, string frag): BaseShader(vert, frag) {}
 
 
-void ShadowShader::init() {}
+void ShadowShader::init() {
+
+    // FBO
+    glGenFramebuffers(1, &this->FBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+
+    glGenTextures(1, &gShadow);
+    glBindTexture(GL_TEXTURE_2D, gShadow);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, 768, 768, 0, GL_RGB, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gShadow, 0);
+
+    unsigned int attachments[] = { GL_COLOR_ATTACHMENT0 };
+    glDrawBuffers(1, attachments);
+
+    // RBO (depth & stencil buffer)
+    glGenRenderbuffers(1, &RBO);
+    glBindRenderbuffer(GL_RENDERBUFFER, RBO);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 768, 768);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RBO);
+
+    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        cout << "ERROR Framebuffer error." << endl;
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
 
 
 void ShadowShader::render(unsigned int gPosition, unsigned int gShadowmap) {
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, this->FBO);
     glDisable(GL_DEPTH_TEST);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     // glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -378,6 +404,8 @@ void ShadowShader::render(unsigned int gPosition, unsigned int gShadowmap) {
     glBindVertexArray(QUAD_VAO);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     glBindVertexArray(0);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 
@@ -420,6 +448,8 @@ void Shader::initShader(ShaderArg* arg = nullptr) {
     geomShader->init(vertices, indices); 
     cerr<<"shadowmapShader->init();"<<endl;
     shadowmapShader->init(vertices);
+    cerr<<"shadowShader->init();"<<endl;
+    shadowShader->init();
     cerr<<"displayShader->init();"<<endl;
     displayShader->init();
 
@@ -443,8 +473,8 @@ void Shader::updateShader(ShaderArg* arg = nullptr) {
 
     geomShader->render(sceneRotationY, sceneRotationX);
     shadowmapShader->render();
-    // displayShader->render(shadowmapShader->gDepth);
     shadowShader->render(geomShader->gPosition, shadowmapShader->gDepth);
+    displayShader->render(shadowShader->gShadow);
 
 }
 

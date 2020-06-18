@@ -26,7 +26,7 @@
 
     Search for blockers to decide filter size and then apply filter
 
-    Position(cam), Shadow(cam), Shadowmap[tex] -> BlockerSearchRegion. -> AvgBlockerDepth. -> FilterSize. -> FilteredShadow(cam)
+    Position(cam), Shadow(cam), Shadowmap(light) -> BlockerSearchRegion. -> AvgBlockerDepth. -> FilterSize. -> FilteredShadow(cam)
 
 5. Blend
 

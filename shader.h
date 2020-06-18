@@ -69,23 +69,23 @@ public:
 };
 
 
+class ShadowShader: public BaseShader {
+public:
+    unsigned int FBO, RBO;
+    unsigned int gShadow;
+    ShadowShader(std::string vert, std::string frag);
+    void init();    
+    void render(unsigned int gPosition, unsigned int gShadowmap);
+};
+
+
+
 class DisplayShader: public BaseShader {
 public:
     DisplayShader(std::string vert, std::string frag);
     void init();    
     void render(unsigned int texture);
 };
-
-
-class ShadowShader: public BaseShader {
-public:
-    ShadowShader(std::string vert, std::string frag);
-
-    void init();    
-    void render(unsigned int gPosition, unsigned int gShadowmap);
-};
-
-
 
 
 
