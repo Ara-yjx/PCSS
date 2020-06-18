@@ -5,7 +5,7 @@ in vec2 TexCoords;
 out vec4 FragColor;
 
 uniform sampler2D gPosition;
-uniform sampler2D gShadowmap;
+uniform sampler2D gDepth;
 
 
 mat4 projection() {
@@ -59,7 +59,8 @@ void main() {
     lightSpacePosition = lightSpacePosition / lightSpacePosition.w;
     // Get depth
     vec2 shadowmapTexCoord = (lightSpacePosition.xy + vec2(1,1)) / 2; // map[-1,1]->[0,1]
-    float shadowmapDepth = texture(gShadowmap, shadowmapTexCoord).x;
+    // float shadowmapDepth = texture(gDepth, shadowmapTexCoord).x;
+    float shadowmapDepth = textureLod(gDepth, shadowmapTexCoord, 3).x;
 
     if(shadowmapDepth < lightSpacePosition.z - DEPTH_THRESHOLD) {
         FragColor = vec4(0,0,0,1);
@@ -69,7 +70,6 @@ void main() {
     }
     // FragColor = vec4(vec3(shadowmapDepth), 1);
     // FragColor = (vec4(shadowmapTexCoord,0, 1));
-    // FragColor = texture(gShadowmap, TexCoords) / 5;
+    // FragColor = texture(gDepth, TexCoords) / 5;
     // FragColor = (vec4(vec3(shadowmapTexCoord.x), 1));
-    // FragColor = vec4(1.0);
 }
