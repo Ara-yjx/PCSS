@@ -52,6 +52,7 @@ mat4 projection() {
 
 void main() {
     float DEPTH_THRESHOLD = 0.01;
+    float PERCENTAGE_ZERODIVISION = 0.0006;
 
     // vec4 Position = vec4(texture(gPosition, TexCoords).xyz, 1);
     vec4 Position = texture(gPosition, TexCoords);
@@ -70,9 +71,16 @@ void main() {
     float avgDepth2 = textureLod(gDepth2, shadowmapTexCoord, mipmapLevel).x;
     float varDepth = avgDepth2 - avgDepth * avgDepth;
 
-    float percentage = varDepth / (varDepth + (lightSpacePosition.z - avgDepth) * (lightSpacePosition.z - avgDepth));
+    float percentage;
+    if(lightSpacePosition.z - avgDepth > DEPTH_THRESHOLD) // shadow
+        percentage = (varDepth + PERCENTAGE_ZERODIVISION) / (varDepth + pow(lightSpacePosition.z - avgDepth, 2) + PERCENTAGE_ZERODIVISION);
+    else // this one-tailed Chebyshev's Ineq only works asssumes receiverDepth >= avgDepth
+        percentage = 1;
+    // I'm a genius!!!
 
-    // gShadowCoef = vec4(vec3(abs(varDepth)*50), 1);
     gShadowCoef = vec4(vec3(percentage), 1);
+    // gShadowCoef = vec4(vec3(abs(varDepth)*100), 1);
+    // gShadowCoef = vec4(vec3(avgDepth2)/10000, 1);
+
     // gShadowCoef = vec4(texture(gDepth, TexCoords).xyz, 1);
 }

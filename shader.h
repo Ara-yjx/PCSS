@@ -42,14 +42,12 @@ public:
 class GeomShader: public BaseShader {
 public:
     std::vector<float> vertices;
-    // std::vector<unsigned int> indices;
-    // const static size_t stride = 6;
     unsigned int VAO, VBO, FBO, RBO;
-    unsigned int gPosition, gNormal;
+    unsigned int gPosition, gNormal, gColor;
 
     GeomShader(std::string vert, std::string frag);
 
-    void init(std::vector<float> vertices, std::vector<unsigned int> indices);
+    void init(std::vector<float> vertices);
     void render(float sceneRotation, float sceneScale);
 };
 
@@ -108,7 +106,7 @@ class BlendShader: public BaseShader {
 public:
     BlendShader(std::string vert, std::string frag);
     void init();    
-    void render(unsigned int gShadow);
+    void render(unsigned int gPosition, unsigned int gNormal, unsigned int gColor, unsigned int gShadow, int shadowSwitch);
 };
 
 

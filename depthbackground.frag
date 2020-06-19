@@ -12,11 +12,15 @@ void main() {
 
     GDepth  = texture(gDepth, TexCoords);
 
-    if(GDepth.x < 0.1)
-        GDepth = vec4(1000,1000,1000,1);
+    if(GDepth.x < 0.2)
+        GDepth = vec4(100,100,100,1);
         // GDepth = vec4(1,1,1,2) - GDepth;
 
+
     GDepth2 = texture(gDepth2, TexCoords);
-    if(GDepth2.x < 0.01)
-        GDepth2 = vec4(1000000,1000000,1000000,1);
+    if(GDepth2.x < 0.1)
+        GDepth2 = vec4(10000,10000,10000,1);
+
+    // GDepth = vec4(100,0,0,1);
+
 }

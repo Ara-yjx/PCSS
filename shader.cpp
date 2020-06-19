@@ -170,10 +170,10 @@ BaseShader::BaseShader(string vert, string frag) {
 GeomShader::GeomShader(string vert, string frag): BaseShader(vert, frag) {}
 
 
-void GeomShader::init(vector<float> vertices, vector<unsigned int> indices) {
-    cout<<vertices.size()<<' '<<indices.size()<<endl;
+void GeomShader::init(vector<float> vertices) {
+    cout<<vertices.size()<<endl;
     this->vertices = vertices;
-    // this->indices = indices;
+
     // VBO
     glGenBuffers(1, &(this->VBO)); // create a buffer object with ID
     glBindBuffer(GL_ARRAY_BUFFER, this->VBO); // let the buffer be a VBO buffer 
@@ -208,8 +208,15 @@ void GeomShader::init(vector<float> vertices, vector<unsigned int> indices) {
     // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gNormal, 0);
 
-    unsigned int attachments[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
-    glDrawBuffers(2, attachments);
+    glGenTextures(1, &gColor);
+    glBindTexture(GL_TEXTURE_2D, gColor);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, 768, 768, 0, GL_RGB, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gColor, 0);
+
+    unsigned int attachments[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
+    glDrawBuffers(3, attachments);
 
     // RBO (depth & stencil buffer)
     glGenRenderbuffers(1, &RBO);
@@ -520,21 +527,47 @@ BlendShader::BlendShader(string vert, string frag): BaseShader(vert, frag) {}
 void BlendShader::init() {}
 
 
-void BlendShader::render(unsigned int texture) {
+void BlendShader::render(unsigned int gPosition, unsigned int gNormal, unsigned int gColor, unsigned int gShadow, int shadowSwitch) {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glDisable(GL_DEPTH_TEST);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     // glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
     glUseProgram(shaderProgram);
-    // glUniform1i(glGetUniformLocation(shaderProgram, "tex"), 0);
+    glUniform1i(glGetUniformLocation(shaderProgram, "gPosition"), 0);
+    glUniform1i(glGetUniformLocation(shaderProgram, "gNormal"), 1);
+    glUniform1i(glGetUniformLocation(shaderProgram, "gColor"), 2);
+    glUniform1i(glGetUniformLocation(shaderProgram, "gShadow"), 3);
+
+    glUniform1i(glGetUniformLocation(shaderProgram, "shadowSwitch"), shadowSwitch);
 
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture);
+    glBindTexture(GL_TEXTURE_2D, gPosition);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);   
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);   
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, gNormal);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);   
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, gColor);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);   
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, gShadow);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);   
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
     glBindVertexArray(QUAD_VAO);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
@@ -581,7 +614,7 @@ void Shader::initShader(ShaderArg* arg = nullptr) {
     cerr<<"initQuad();"<<endl;
     initQuad();
     cerr<<"geomShader->init(vertices, indices);"<<endl;
-    geomShader->init(vertices, indices); 
+    geomShader->init(vertices); 
     cerr<<"depthShader->init();"<<endl;
     depthShader->init(vertices);
     cerr<<"depthBackgroundShader->init();"<<endl;
@@ -614,8 +647,8 @@ void Shader::updateShader(ShaderArg* arg = nullptr) {
     depthShader->render();
     depthBackgroundShader->render(depthShader->gDepth, depthShader->gDepth2);
     shadowShader->render(geomShader->gPosition, depthBackgroundShader->gDepth, depthBackgroundShader->gDepth2);
-    blendShader->render(shadowShader->gShadow);
-    // displayShader->render(depthBackgroundShader->gDepth);
+    blendShader->render(geomShader->gPosition, geomShader->gNormal, geomShader->gColor, shadowShader->gShadow, arg->switchState1 ? 1:0);
+    // displayShader->render(shadowShader->gShadow);
 
 }
 

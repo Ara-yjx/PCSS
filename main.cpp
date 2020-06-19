@@ -43,7 +43,7 @@ public:
         //     cout << "INFO slider value: " << value << endl;
         // });
 
-        CheckBox *checkbox1 = new CheckBox(window, "SSAO");
+        CheckBox *checkbox1 = new CheckBox(window, "Shadow");
         checkbox1->setFontSize(16);
         checkbox1->setChecked(this->switchState1);
         checkbox1->setCallback([&](bool value) {
