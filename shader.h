@@ -89,7 +89,8 @@ class BlendShader: public BaseShader {
 public:
     BlendShader();
     void init();    
-    void render(Scene scene, unsigned int gPosition, unsigned int gNormal, unsigned int gColor, unsigned int gShadow);
+    void render(Scene scene, unsigned int gPosition, unsigned int gNormal, unsigned int gColor, 
+        unsigned int gShadow0, unsigned int gShadow1, unsigned int gShadow2);
 };
 
 

@@ -7,7 +7,7 @@
 class Light {
 public:
     Eigen::Vector3f position;
-    Eigen::Vector3f displacement;
+    // Eigen::Vector3f displacement;
     float size;
     nanogui::Color color;
     bool on;

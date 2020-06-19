@@ -527,7 +527,7 @@ BlendShader::BlendShader(): BaseShader(BLEND_VERT, BLEND_FRAG) {}
 void BlendShader::init() {}
 
 
-void BlendShader::render(Scene scene, unsigned int gPosition, unsigned int gNormal, unsigned int gColor, unsigned int gShadow) {
+void BlendShader::render(Scene scene, unsigned int gPosition, unsigned int gNormal, unsigned int gColor, unsigned int gShadow0, unsigned int gShadow1, unsigned int gShadow2) {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glDisable(GL_DEPTH_TEST);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -537,7 +537,37 @@ void BlendShader::render(Scene scene, unsigned int gPosition, unsigned int gNorm
     glUniform1i(glGetUniformLocation(shaderProgram, "gPosition"), 0);
     glUniform1i(glGetUniformLocation(shaderProgram, "gNormal"), 1);
     glUniform1i(glGetUniformLocation(shaderProgram, "gColor"), 2);
-    glUniform1i(glGetUniformLocation(shaderProgram, "gShadow"), 3);
+    glUniform1i(glGetUniformLocation(shaderProgram, "gShadow0"), 3);
+    glUniform1i(glGetUniformLocation(shaderProgram, "gShadow1"), 4);
+    glUniform1i(glGetUniformLocation(shaderProgram, "gShadow2"), 5);
+
+    float lightPos[9];
+    lightPos[0] = scene.light[0].position.x();
+    lightPos[1] = scene.light[0].position.y();
+    lightPos[2] = scene.light[0].position.z();
+    lightPos[3] = scene.light[1].position.x();
+    lightPos[4] = scene.light[1].position.y();
+    lightPos[5] = scene.light[1].position.z();
+    lightPos[6] = scene.light[2].position.x();
+    lightPos[7] = scene.light[2].position.y();
+    lightPos[8] = scene.light[2].position.z();
+    glUniform3fv(glGetUniformLocation(shaderProgram, "lightPosition"), 3, lightPos);
+    float lightColor[9];
+    lightColor[0] = scene.light[0].color.r();
+    lightColor[1] = scene.light[0].color.g();
+    lightColor[2] = scene.light[0].color.b();
+    lightColor[3] = scene.light[1].color.r();
+    lightColor[4] = scene.light[1].color.g();
+    lightColor[5] = scene.light[1].color.b();
+    lightColor[6] = scene.light[2].color.r();
+    lightColor[7] = scene.light[2].color.g();
+    lightColor[8] = scene.light[2].color.b();
+    glUniform3fv(glGetUniformLocation(shaderProgram, "lightColor"), 3, lightColor);
+    int lightOn[3];
+    lightPos[0] = scene.light[0].on ? 1:0;
+    lightPos[1] = scene.light[1].on ? 1:0;
+    lightPos[2] = scene.light[2].on ? 1:0;
+    glUniform1iv(glGetUniformLocation(shaderProgram, "lightOn"), 3, lightOn);
 
     glUniform1i(glGetUniformLocation(shaderProgram, "shadowSwitch"), scene.shadowOn);
 
@@ -563,7 +593,21 @@ void BlendShader::render(Scene scene, unsigned int gPosition, unsigned int gNorm
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
     glActiveTexture(GL_TEXTURE3);
-    glBindTexture(GL_TEXTURE_2D, gShadow);
+    glBindTexture(GL_TEXTURE_2D, gShadow0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);   
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    glActiveTexture(GL_TEXTURE4);
+    glBindTexture(GL_TEXTURE_2D, gShadow1);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);   
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    glActiveTexture(GL_TEXTURE5);
+    glBindTexture(GL_TEXTURE_2D, gShadow2);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);   
@@ -649,7 +693,7 @@ void Shader::updateShader(Scene scene) {
     depthShader[0]->render(scene.light[0]);
     depthBackgroundShader[0]->render(depthShader[0]->gDepth, depthShader[0]->gDepth2);
     shadowShader[0]->render(geomShader->gPosition, depthBackgroundShader[0]->gDepth, depthBackgroundShader[0]->gDepth2);
-    blendShader->render(scene, geomShader->gPosition, geomShader->gNormal, geomShader->gColor, shadowShader[0]->gShadow);
+    blendShader->render(scene, geomShader->gPosition, geomShader->gNormal, geomShader->gColor, shadowShader[0]->gShadow, shadowShader[0]->gShadow, shadowShader[0]->gShadow);
     // displayShader->render(shadowShader->gShadow);
 
 }

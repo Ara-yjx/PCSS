@@ -32,20 +32,20 @@ public:
     App() : Screen(Eigen::Vector2i(768, 768), "PCSS"), Shader() {
         
         scene.light[0].position = Vector3f(0,2,0);
-        scene.light[0].displacement = Vector3f(0,0,0);
+        // scene.light[0].displacement = Vector3f(0,0,0);
         scene.light[0].size = 0.2;
         scene.light[0].color = Color(1.0f, 1.0f, 1.0f, 1.0f);
         scene.light[0].on = true;
 
         scene.light[1].position = Vector3f(1,2,0);
-        scene.light[1].displacement = Vector3f(0,0,0);
+        // scene.light[1].displacement = Vector3f(0,0,0);
         scene.light[1].size = 0.2;
         scene.light[1].color = Color(1.0f, 1.0f, 1.0f, 1.0f);
         scene.light[1].on = true;
 
         scene.light[2].position = Vector3f(0,2,1);
+        // scene.light[2].displacement = Vector3f(0,0,0);
         scene.light[2].size = 0.2;
-        scene.light[2].displacement = Vector3f(0,0,0);
         scene.light[2].color = Color(1.0f, 1.0f, 1.0f, 1.0f);
         scene.light[2].on = true;
 
@@ -79,7 +79,7 @@ public:
         ColorPicker *cp = new ColorPicker(window, {255, 120, 0, 255});
         cp->setFixedSize({100, 25});
         cp->setFinalCallback([&](const Color &c) {
-            this->scene.light[0].color = c;
+            // this->scene.light[0].color = c;
         });
 
 

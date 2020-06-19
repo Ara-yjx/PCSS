@@ -7,6 +7,9 @@ layout (location = 2) in float in_IsGround;
 layout (location = 0) out float Depth;
 
 uniform vec3 lightPosition;
+// uniform vec3 lightColor;
+// uniform float lightSize;
+// uniform int lightOn;
 
 
 mat4 projection() {
