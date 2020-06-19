@@ -25,16 +25,16 @@ using Eigen::Vector3d;
 
 const string GEOM_VERT = "../geom.vert";
 const string GEOM_FRAG = "../geom.frag";
-const string SHADOWMAP_VERT = "../shadowmap.vert";
-const string SHADOWMAP_FRAG = "../shadowmap.frag";
+const string DEPTH_VERT = "../depth.vert";
+const string DEPTH_FRAG = "../depth.frag";
 const string DEPTHBACKGROUND_VERT = "../depthbackground.vert";
 const string DEPTHBACKGROUND_FRAG = "../depthbackground.frag";
-// const string BLEND_VERT = "../blend.vert";
-// const string BLEND_FRAG = "../blend.frag";
 const string DISPLAY_VERT = "../display.vert";
 const string DISPLAY_FRAG = "../display.frag";
 const string SHADOW_VERT = "../shadow.vert";
 const string SHADOW_FRAG = "../shadow.frag";
+const string BLEND_VERT = "../blend.vert";
+const string BLEND_FRAG = "../blend.frag";
 const string DEFAULT_MODEL = "../models/xbox.obj";
 const float PI = 3.14159265358979f;
 
@@ -284,10 +284,10 @@ void DisplayShader::render(unsigned int texture) {
 }
 
 
-ShadowmapShader::ShadowmapShader(string vert, string frag): BaseShader(vert, frag) {};
+DepthShader::DepthShader(string vert, string frag): BaseShader(vert, frag) {};
 
 
-void ShadowmapShader::init(vector<float> vertices) {
+void DepthShader::init(vector<float> vertices) {
     this->vertices = vertices;
 
     // // init gDepth to 1000, gDepth2 to 1000000
@@ -349,7 +349,7 @@ void ShadowmapShader::init(vector<float> vertices) {
 }
 
 
-void ShadowmapShader::render() {
+void DepthShader::render() {
     glEnable(GL_DEPTH_TEST); 
     glDepthFunc(GL_LESS);
     glBindFramebuffer(GL_FRAMEBUFFER, FBO);   
@@ -516,7 +516,7 @@ void ShadowShader::render(unsigned int gPosition, unsigned int gDepth, unsigned 
 void Shader::initShader(ShaderArg* arg = nullptr) {
 
     geomShader = new GeomShader(GEOM_VERT, GEOM_FRAG);
-    shadowmapShader = new ShadowmapShader(SHADOWMAP_VERT, SHADOWMAP_FRAG);
+    depthShader = new DepthShader(DEPTH_VERT, DEPTH_FRAG);
     shadowShader = new ShadowShader(SHADOW_VERT, SHADOW_FRAG);
     depthBackgroundShader = new DepthBackgroundShader(DEPTHBACKGROUND_VERT, DEPTHBACKGROUND_FRAG);
     displayShader = new DisplayShader(DISPLAY_VERT, DISPLAY_FRAG);
@@ -551,8 +551,8 @@ void Shader::initShader(ShaderArg* arg = nullptr) {
     initQuad();
     cerr<<"geomShader->init(vertices, indices);"<<endl;
     geomShader->init(vertices, indices); 
-    cerr<<"shadowmapShader->init();"<<endl;
-    shadowmapShader->init(vertices);
+    cerr<<"depthShader->init();"<<endl;
+    depthShader->init(vertices);
     cerr<<"depthBackgroundShader->init();"<<endl;
     depthBackgroundShader->init();
     cerr<<"shadowShader->init();"<<endl;
@@ -579,8 +579,8 @@ void Shader::updateShader(ShaderArg* arg = nullptr) {
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
     geomShader->render(sceneRotationY, sceneRotationX);
-    shadowmapShader->render();
-    depthBackgroundShader->render(shadowmapShader->gDepth, shadowmapShader->gDepth2);
+    depthShader->render();
+    depthBackgroundShader->render(depthShader->gDepth, depthShader->gDepth2);
     shadowShader->render(geomShader->gPosition, depthBackgroundShader->gDepth, depthBackgroundShader->gDepth2);
     displayShader->render(shadowShader->gShadow);
     // displayShader->render(depthBackgroundShader->gDepth);

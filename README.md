@@ -3,33 +3,37 @@
 
 # Shader function
 
-1. GeomShader
+1. **GeomShader**
 
     Rasterize mesh.
 
     Geometry -> Position(cam), Normal(cam), Color(cam)
 
 
-2. ShadowmapShader
+2. **DepthShader**
 
-    Generate shadowmap (depth)
+    Compute depth and depth^2 in light source's space
 
-    Geometry -> Shadowmap(light)
+    Geometry -> Depth&2(light)
 
-3. ShadowShader (deferred)
 
-    Generate shadow/blockers (cam)
+3. **DepthBackgroundShader** (deferred)
 
-    Shadowmap(light), Position(cam) -> Shadow(cam)
+    Set the depth of background (non-object) from 0 to a high value, as this is difficult to implement in DepthShader
 
-4. FilterShader (deferred)
+    Depth&2(light) -> Depth&2(light)
 
+
+4. **ShadowShader** (deferred)
+
+    Generate shadow
     Search for blockers to decide filter size and then apply filter
 
-    Position(cam), Shadow(cam), Shadowmap(light) -> BlockerSearchRegion. -> AvgBlockerDepth. -> FilterSize. -> FilteredShadow(cam)
+    Depth&2(light), Position(cam) -> BlockerSearchRegion. ->  AvgBlockerDepth. -> FilterSize. -> Shadow(cam)
+
 
 5. Blend
 
-    Do Blinn-Phong shading and apply shadow
+    Perform Blinn-Phong shading and apply shadow
 
-    FilteredShadow, Normal, Color -> Yeah!
+    Shadow, Normal -> Yeah!

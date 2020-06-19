@@ -55,14 +55,14 @@ public:
 
 
 
-class ShadowmapShader: public BaseShader {
+class DepthShader: public BaseShader {
 public:
     std::vector<float> vertices;
     // const static size_t stride = 6;
     unsigned int VAO, VBO, FBO, RBO;
     unsigned int gDepth, gDepth2;
     // float *gDepthInitData, *gDepth2InitData;
-    ShadowmapShader(std::string vert, std::string frag);
+    DepthShader(std::string vert, std::string frag);
 
     void init(std::vector<float> vertices);
     void render();
@@ -81,6 +81,8 @@ public:
     void init();
     void render(unsigned int gDepth, unsigned int gDepth2);
 };
+
+
 
 class ShadowShader: public BaseShader {
 public:
@@ -102,6 +104,15 @@ public:
 
 
 
+class BlendShader: public BaseShader {
+public:
+    BlendShader(std::string vert, std::string frag);
+    void init();    
+    void render(unsigned int gShadow);
+};
+
+
+
 class Shader {
 public:
     virtual void initShader(ShaderArg* arg);
@@ -109,7 +120,7 @@ public:
 
     GeomShader *geomShader;
     DisplayShader *displayShader;
-    ShadowmapShader *shadowmapShader;
+    DepthShader *depthShader;
     ShadowShader *shadowShader;
     DepthBackgroundShader *depthBackgroundShader;
 };
