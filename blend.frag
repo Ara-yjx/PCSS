@@ -18,7 +18,9 @@ uniform int shadowSwitch;
 void main() {
     float ambientCoef = 0.05;
     float diffuseCoef = 0.85 / 3;
+    // diffuseCoef = 0;
     float specularCoef = 1.0 / 3;
+    specularCoef = 0;
     float specularExp = 20;
 
     vec4 Position = texture(gPosition, TexCoords);
@@ -37,9 +39,9 @@ void main() {
             vec4 lightPos = vec4(lightPosition[l],1);
             vec3 lightcolor = lightColor[l];
             vec4 lightDirection = lightPos - Position;
-            float inOutAngle = max(0, dot(lightDirection / length(lightDirection), Normal));
-            vec4 diffuse = vec4(lightcolor * inOutAngle, 1.0);
-            vec4 specular = vec4(vec3(pow(inOutAngle, specularExp)), 1.0);
+            lightDirection /= length(lightDirection);
+            vec4 diffuse = vec4(lightcolor * max(0, dot(lightDirection, Normal)), 1.0);
+            vec4 specular = vec4(vec3(pow(max(0, lightDirection.z), specularExp)), 1.0);
 
             float shadowCoef = 1;
             if(shadowSwitch == 1)

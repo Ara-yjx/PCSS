@@ -34,19 +34,19 @@ public:
         scene.light[0].position = Vector3f(0,2,0);
         // scene.light[0].displacement = Vector3f(0,0,0);
         scene.light[0].size = 0.05;
-        scene.light[0].color = Color(0.6f, 0.6f, 0.6f, 1.0f);
+        scene.light[0].color = Color(0.8f, 0.8f, 0.8f, 1.0f);
         scene.light[0].on = true;
 
         scene.light[1].position = Vector3f(0,3,0);
         // scene.light[1].displacement = Vector3f(0,0,0);
         scene.light[1].size = 0.05;
-        scene.light[1].color = Color(0.6f, 0.6f, 0.6f, 1.0f);
+        scene.light[1].color = Color(0.8f, 0.8f, 0.8f, 1.0f);
         scene.light[1].on = true;
 
         scene.light[2].position = Vector3f(0,5,0);
         // scene.light[2].displacement = Vector3f(0,0,0);
         scene.light[2].size = 0.05;
-        scene.light[2].color = Color(0.6f, 0.6f, 0.6f, 1.0f);
+        scene.light[2].color = Color(0.8f, 0.8f, 0.8f, 1.0f);
         scene.light[2].on = true;
 
         scene.shadowOn = true;
