@@ -50,22 +50,44 @@ mat4 projection() {
     return mvp;
 }
 
+
 void main() {
     float DEPTH_THRESHOLD = 0.01;
     float PERCENTAGE_ZERODIVISION = 0.0006;
+
+    vec4 lightPosition = vec4(0,2,0,1);
+    float lightSize = 0.2;
+    float n = 1;
+    float f = 5;
+    float screenDepth = 1.0/f; // depth of screen, after othro projection
 
     // vec4 Position = vec4(texture(gPosition, TexCoords).xyz, 1);
     vec4 Position = texture(gPosition, TexCoords);
     // To light space
     vec4 lightSpacePosition = projection() * Position;
-    lightSpacePosition = lightSpacePosition / lightSpacePosition.w;
+    lightSpacePosition /= lightSpacePosition.w;
     // Get depth coord
     vec2 shadowmapTexCoord = (lightSpacePosition.xy + vec2(1,1)) / 2; // map[-1,1]->[0,1]
 
 
-    float filtersize = 0.02;
-    float mipmapLevel = log2(filtersize * 768);
-
+    // Filter size
+    // float lightDistance = length((lightPosition - Position).xyz);
+    float lightDistance = lightSpacePosition.z;
+    // float lightDistance = textureLod(gDepth, shadowmapTexCoord, 0).x;
+    float blockerSearchRegion = lightSize / lightDistance * (lightDistance - screenDepth);
+    float blockerSearchMipmapLevel = log2(blockerSearchRegion * 768);
+    float blockerAvgDepth = textureLod(gDepth, shadowmapTexCoord, blockerSearchMipmapLevel).x;
+    
+    float filtersize, mipmapLevel;
+    if(lightDistance > blockerAvgDepth) {
+        filtersize = (lightDistance - blockerAvgDepth) * lightSize / blockerAvgDepth;
+        mipmapLevel = log2(filtersize * 768);
+    } else {
+        mipmapLevel = 0; // filtersize cannot be 0, or, if no blocker then don't filter
+    }
+    // float filtersize = 0.02;
+    // mipmapLevel = 2;
+    
     // float receiverDepth = texture(gDepth, shadowmapTexCoord).x;
     float avgDepth = textureLod(gDepth, shadowmapTexCoord, mipmapLevel).x;
     float avgDepth2 = textureLod(gDepth2, shadowmapTexCoord, mipmapLevel).x;
@@ -79,6 +101,7 @@ void main() {
     // I'm a genius!!!
 
     gShadowCoef = vec4(vec3(percentage), 1);
+    // gShadowCoef = vec4(vec3(mipmapLevel/10), 1);
     // gShadowCoef = vec4(vec3(abs(varDepth)*100), 1);
     // gShadowCoef = vec4(vec3(avgDepth2)/10000, 1);
 

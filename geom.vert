@@ -65,6 +65,8 @@ void main()
 
     gl_Position = projection() * homoPos;
 
+    gl_Position /= gl_Position.w;
+    // gl_Position.xy *= 2;
 
     Position = in_Position; 
     Normal = in_Normal;
