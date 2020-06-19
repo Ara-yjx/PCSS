@@ -1,5 +1,6 @@
 #include <string>
 #include <vector>
+#include "scene.h"
 #ifndef SHADER_H
 #define SHADER_H
 
@@ -7,24 +8,6 @@
 #define KERNEL_SAMPLE 64
 #define RANDOM_FLOATS 320
 #define SCREEN_SIZE 768
-
-class ShaderArg {
-public:
-    float sliderValue;
-    float arrowXstate;
-    float arrowYstate;
-    float bracketState;
-    bool switchState1;
-    bool switchState2;
-    std::string argObj;
-
-    ShaderArg() {};
-    ShaderArg(std::string argObj)
-    : argObj(argObj) {};
-    ShaderArg(float sliderValue, float arrowXstate, float arrowYstate, float bracketState, bool switchState1, bool switchState2) 
-    : sliderValue(sliderValue), arrowXstate(arrowXstate), arrowYstate(arrowYstate), bracketState(bracketState), switchState1(switchState1), switchState2(switchState2) {};
-};
-
 
 
 class BaseShader {
@@ -48,7 +31,7 @@ public:
     GeomShader(std::string vert, std::string frag);
 
     void init(std::vector<float> vertices);
-    void render(float sceneRotation, float sceneScale);
+    void render(Scene scene);
 };
 
 
@@ -60,10 +43,10 @@ public:
     unsigned int VAO, VBO, FBO, RBO;
     unsigned int gDepth, gDepth2;
     // float *gDepthInitData, *gDepth2InitData;
-    DepthShader(std::string vert, std::string frag);
+    DepthShader();
 
     void init(std::vector<float> vertices);
-    void render();
+    void render(Light light);
 };
 
 
@@ -106,18 +89,18 @@ class BlendShader: public BaseShader {
 public:
     BlendShader(std::string vert, std::string frag);
     void init();    
-    void render(unsigned int gPosition, unsigned int gNormal, unsigned int gColor, unsigned int gShadow, int shadowSwitch);
+    void render(Scene scene, unsigned int gPosition, unsigned int gNormal, unsigned int gColor, unsigned int gShadow);
 };
 
 
 
 class Shader {
 public:
-    virtual void initShader(ShaderArg* arg);
-    virtual void updateShader(ShaderArg* arg);
+    virtual void initShader();
+    virtual void updateShader(Scene scene);
 
     GeomShader *geomShader;
-    DepthShader *depthShader;
+    DepthShader depthShader[3];
     ShadowShader *shadowShader;
     DepthBackgroundShader *depthBackgroundShader;
     BlendShader *blendShader;

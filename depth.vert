@@ -2,13 +2,15 @@
 
 layout (location = 0) in vec3 in_Position;
 layout (location = 1) in vec3 in_Normal;
+layout (location = 2) in float in_IsGround;
 
 layout (location = 0) out float Depth;
+
+uniform vec3 lightPosition;
 
 
 mat4 projection() {
 
-    vec3 lightPosition = vec3(0,2,0);
 
     mat4 centerLight = mat4(
         1,0,0,0,

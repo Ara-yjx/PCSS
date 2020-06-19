@@ -2,11 +2,12 @@
 #include <iostream>
 #include <string>
 #include "shader.h"
-// #include "shader.cpp"
+#include "scene.h"
 
 using namespace nanogui;
 using std::cout;
 using std::endl;
+using Eigen::Vector3f;
 
 
 class App : public Screen, public Shader {
@@ -15,6 +16,7 @@ public:
     float arrowXstate = 0;
     float arrowXStateSmooth = 0;
     float arrowYstate = 0;
+    float arrowYStateSmooth = 0;
     float bracketState = 0;
     float bracketStateSmooth = 0;
     bool switchState1 = true;
@@ -25,8 +27,30 @@ public:
 
     
     Shader* shader;
+    Scene scene;
 
-    App() : Screen(Eigen::Vector2i(768, 768), "PRT"), Shader() {
+    App() : Screen(Eigen::Vector2i(768, 768), "PCSS"), Shader() {
+        
+        scene.light[0].position = Vector3f(0,2,0);
+        scene.light[0].displacement = Vector3f(0,0,0);
+        scene.light[0].size = 0.2;
+        scene.light[0].color = Color(1.0f, 1.0f, 1.0f, 1.0f);
+        scene.light[0].on = true;
+
+        scene.light[1].position = Vector3f(1,2,0);
+        scene.light[1].displacement = Vector3f(0,0,0);
+        scene.light[1].size = 0.2;
+        scene.light[1].color = Color(1.0f, 1.0f, 1.0f, 1.0f);
+        scene.light[1].on = true;
+
+        scene.light[2].position = Vector3f(0,2,1);
+        scene.light[2].size = 0.2;
+        scene.light[2].displacement = Vector3f(0,0,0);
+        scene.light[2].color = Color(1.0f, 1.0f, 1.0f, 1.0f);
+        scene.light[2].on = true;
+
+        scene.shadowOn = true;
+
 
         Window* window = new Window(this, "-");
         window->setPosition(Vector2i(15, 15));
@@ -43,21 +67,26 @@ public:
         //     cout << "INFO slider value: " << value << endl;
         // });
 
-        CheckBox *checkbox1 = new CheckBox(window, "Shadow");
-        checkbox1->setFontSize(16);
-        checkbox1->setChecked(this->switchState1);
-        checkbox1->setCallback([&](bool value) {
-            this->switchState1 = value;
+        CheckBox *checkboxShadow = new CheckBox(window, "Shadow");
+        checkboxShadow->setFontSize(16);
+        checkboxShadow->setChecked(true);
+        checkboxShadow->setCallback([&](bool value) {
+            this->scene.shadowOn = value;
         });
 
-        CheckBox *checkbox2 = new CheckBox(window, "filter");
-        checkbox2->setFontSize(16);
-        checkbox2->setChecked(this->switchState2);
-        checkbox2->setCallback([&](bool value) {
-            this->switchState2 = value;
+        new Label(window, "Light 0", "sans-bold");
+
+        ColorPicker *cp = new ColorPicker(window, {255, 120, 0, 255});
+        cp->setFixedSize({100, 25});
+        cp->setFinalCallback([&](const Color &c) {
+            this->scene.light[0].color = c;
         });
 
-        initShader(nullptr);
+
+        
+
+
+        initShader();
     }
 
 
@@ -101,9 +130,16 @@ public:
 
 
     virtual void drawContents() {
+        float rotationRate = 0.3;
         arrowXStateSmooth = arrowXStateSmooth * 0.9 + arrowXstate * 0.1;
-        bracketStateSmooth = bracketStateSmooth * 0.9 + bracketState * 0.1;
-        updateShader(new ShaderArg(sliderValue, arrowXStateSmooth, arrowYstate, bracketStateSmooth, switchState1, switchState2));
+        arrowYStateSmooth = arrowYStateSmooth * 0.9 + arrowYstate * 0.1;
+        // bracketStateSmooth = bracketStateSmooth * 0.9 + bracketState * 0.1;
+
+
+        scene.rotationX = arrowYStateSmooth * rotationRate;
+        scene.rotationY = arrowXStateSmooth * rotationRate;
+
+        updateShader(scene);
     }
 
 };

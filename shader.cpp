@@ -109,6 +109,7 @@ void loadModel(string modelFile, vector<float>& vertices, vector<unsigned int>& 
                 vertices.push_back(nx);
                 vertices.push_back(ny);
                 vertices.push_back(nz);
+                vertices.push_back(0);
                 indices.push_back(index_offset + v);
             }
             index_offset += fv;
@@ -183,10 +184,12 @@ void GeomShader::init(vector<float> vertices) {
     // VAO
     glGenVertexArrays(1, &this->VAO);
     glBindVertexArray(VAO);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0); // position
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)0); // position
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(sizeof(float) * 3)); // normal
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(sizeof(float) * 3)); // normal
     glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(sizeof(float) * 6)); // is_ground
+    glEnableVertexAttribArray(2);
 
     // FBO
     glGenFramebuffers(1, &this->FBO);
@@ -231,7 +234,7 @@ void GeomShader::init(vector<float> vertices) {
 }
 
 
-void GeomShader::render(float sceneRotationY, float sceneRotationX) {
+void GeomShader::render(Scene scene) {
 
     glEnable(GL_DEPTH_TEST); 
     glDepthFunc(GL_LESS);
@@ -242,10 +245,8 @@ void GeomShader::render(float sceneRotationY, float sceneRotationX) {
     glUseProgram(this->shaderProgram);
 
     // Set Uniform Params
-    int sceneRotationYLocation = glGetUniformLocation(this->shaderProgram, "sceneRotationY");
-    glUniform1f(sceneRotationYLocation, sceneRotationY);
-    int sceneRotationXLocation = glGetUniformLocation(this->shaderProgram, "sceneRotationX");
-    glUniform1f(sceneRotationXLocation, sceneRotationX);
+    glUniform1f(glGetUniformLocation(this->shaderProgram, "sceneRotationY"), scene.rotationY);
+    glUniform1f(glGetUniformLocation(this->shaderProgram, "sceneRotationX"), scene.rotationX);
 
     // Draw
     glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
@@ -291,19 +292,11 @@ void DisplayShader::render(unsigned int texture) {
 }
 
 
-DepthShader::DepthShader(string vert, string frag): BaseShader(vert, frag) {};
+DepthShader::DepthShader(): BaseShader(DEPTH_VERT, DEPTH_FRAG) {};
 
 
 void DepthShader::init(vector<float> vertices) {
     this->vertices = vertices;
-
-    // // init gDepth to 1000, gDepth2 to 1000000
-    // this->gDepthInitData = new float[768*768*4];
-    // for(int i = 0; i < 768*768*4; i++)
-    //     gDepthInitData[i] = 1000;
-    // this->gDepth2InitData = new float[768*768*4];
-    // for(int i = 0; i < 768*768*4; i++)
-    //     gDepth2InitData[i] = 1000000;
 
     // VBO
     glGenBuffers(1, &(this->VBO)); // create a buffer object with ID
@@ -313,10 +306,12 @@ void DepthShader::init(vector<float> vertices) {
     // VAO
     glGenVertexArrays(1, &this->VAO);
     glBindVertexArray(VAO);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0); // position
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)0); // position
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(sizeof(float) * 3)); // normal
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(sizeof(float) * 3)); // normal
     glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(sizeof(float) * 6)); // normal
+    glEnableVertexAttribArray(2);
 
     // FBO
     glGenFramebuffers(1, &this->FBO);
@@ -356,7 +351,7 @@ void DepthShader::init(vector<float> vertices) {
 }
 
 
-void DepthShader::render() {
+void DepthShader::render(Light light) {
     glEnable(GL_DEPTH_TEST); 
     glDepthFunc(GL_LESS);
     glBindFramebuffer(GL_FRAMEBUFFER, FBO);   
@@ -364,6 +359,8 @@ void DepthShader::render() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glUseProgram(this->shaderProgram);
+
+    glUniform3f(glGetUniformLocation(shaderProgram, "lightPosition"), light.position.x(), light.position.y(), light.position.z());
 
     // Draw
     glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
@@ -527,7 +524,7 @@ BlendShader::BlendShader(string vert, string frag): BaseShader(vert, frag) {}
 void BlendShader::init() {}
 
 
-void BlendShader::render(unsigned int gPosition, unsigned int gNormal, unsigned int gColor, unsigned int gShadow, int shadowSwitch) {
+void BlendShader::render(Scene scene, unsigned int gPosition, unsigned int gNormal, unsigned int gColor, unsigned int gShadow) {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glDisable(GL_DEPTH_TEST);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -539,7 +536,7 @@ void BlendShader::render(unsigned int gPosition, unsigned int gNormal, unsigned 
     glUniform1i(glGetUniformLocation(shaderProgram, "gColor"), 2);
     glUniform1i(glGetUniformLocation(shaderProgram, "gShadow"), 3);
 
-    glUniform1i(glGetUniformLocation(shaderProgram, "shadowSwitch"), shadowSwitch);
+    glUniform1i(glGetUniformLocation(shaderProgram, "shadowSwitch"), scene.shadowOn);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, gPosition);
@@ -576,10 +573,10 @@ void BlendShader::render(unsigned int gPosition, unsigned int gNormal, unsigned 
 
 
 
-void Shader::initShader(ShaderArg* arg = nullptr) {
+void Shader::initShader() {
 
     geomShader = new GeomShader(GEOM_VERT, GEOM_FRAG);
-    depthShader = new DepthShader(DEPTH_VERT, DEPTH_FRAG);
+    // depthShader = new DepthShader(DEPTH_VERT, DEPTH_FRAG);
     shadowShader = new ShadowShader(SHADOW_VERT, SHADOW_FRAG);
     depthBackgroundShader = new DepthBackgroundShader(DEPTHBACKGROUND_VERT, DEPTHBACKGROUND_FRAG);
     blendShader = new BlendShader(BLEND_VERT, BLEND_FRAG);
@@ -598,23 +595,23 @@ void Shader::initShader(ShaderArg* arg = nullptr) {
     vector<unsigned int> indices;
     loadModel(DEFAULT_MODEL, vertices, indices);
 
-    for(int i = 0; i < vertices.size() / 6; i++) {
+    for(int i = 0; i < vertices.size() / 7; i++) {
         // vertices[i*6] /= 2;
         // vertices[i*6+1] /= 2;
         // vertices[i*6+2] /= 2;
-        vertices[i*6+2] -= 0.5;
+        vertices[i*7+2] -= 0.5;
     }
 
     // Add round
     float ground[] = {
-         0.9, -0.3,  0.9, 0, 1, 0,
-         0.9, -0.3, -0.9, 0, 1, 0,
-        -0.9, -0.3,  0.9, 0, 1, 0,
-         0.9, -0.3, -0.9, 0, 1, 0,
-        -0.9, -0.3,  0.9, 0, 1, 0,
-        -0.9, -0.3, -0.9, 0, 1, 0
+         0.9, -0.3,  0.9,   0, 1, 0,   1,
+         0.9, -0.3, -0.9,   0, 1, 0,   1,
+        -0.9, -0.3,  0.9,   0, 1, 0,   1,
+         0.9, -0.3, -0.9,   0, 1, 0,   1,
+        -0.9, -0.3,  0.9,   0, 1, 0,   1,
+        -0.9, -0.3, -0.9,   0, 1, 0,   1,
     };
-    for(int i = 0; i < 36; i++)
+    for(int i = 0; i < 6*7; i++)
         vertices.push_back(ground[i]);
     
 
@@ -635,26 +632,18 @@ void Shader::initShader(ShaderArg* arg = nullptr) {
 }
 
 
-void Shader::updateShader(ShaderArg* arg = nullptr) {
-
-    // Compute params
-    const float rotationRate = 0.3;
-    float brightness = arg->sliderValue;
-    float sceneRotationY = - arg->arrowXstate * rotationRate;
-    float sceneRotationX = arg->arrowYstate * rotationRate;
-
-    if(arg) delete arg;
+void Shader::updateShader(Scene scene) {
 
     // glEnable(GL_DEPTH_TEST);
     // glDepthFunc(GL_LESS);
 
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
-    geomShader->render(sceneRotationY, sceneRotationX);
-    depthShader->render();
+    geomShader->render(scene);
+    depthShader[0].render(scene.light[0]);
     depthBackgroundShader->render(depthShader->gDepth, depthShader->gDepth2);
     shadowShader->render(geomShader->gPosition, depthBackgroundShader->gDepth, depthBackgroundShader->gDepth2);
-    blendShader->render(geomShader->gPosition, geomShader->gNormal, geomShader->gColor, shadowShader->gShadow, arg->switchState1 ? 1:0);
+    blendShader->render(scene, geomShader->gPosition, geomShader->gNormal, geomShader->gColor, shadowShader->gShadow);
     // displayShader->render(shadowShader->gShadow);
 
 }
