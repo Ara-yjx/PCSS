@@ -29,12 +29,12 @@ const string DEPTH_VERT = "../depth.vert";
 const string DEPTH_FRAG = "../depth.frag";
 const string DEPTHBACKGROUND_VERT = "../depthbackground.vert";
 const string DEPTHBACKGROUND_FRAG = "../depthbackground.frag";
-const string DISPLAY_VERT = "../display.vert";
-const string DISPLAY_FRAG = "../display.frag";
 const string SHADOW_VERT = "../shadow.vert";
 const string SHADOW_FRAG = "../shadow.frag";
 const string BLEND_VERT = "../blend.vert";
 const string BLEND_FRAG = "../blend.frag";
+const string DISPLAY_VERT = "../display.vert";
+const string DISPLAY_FRAG = "../display.frag";
 const string DEFAULT_MODEL = "../models/xbox.obj";
 const float PI = 3.14159265358979f;
 
@@ -435,6 +435,7 @@ void DepthBackgroundShader::render(unsigned int gDepth, unsigned int gDepth2) {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
+
 ShadowShader::ShadowShader(string vert, string frag): BaseShader(vert, frag) {}
 
 
@@ -513,12 +514,42 @@ void ShadowShader::render(unsigned int gPosition, unsigned int gDepth, unsigned 
 }
 
 
+BlendShader::BlendShader(string vert, string frag): BaseShader(vert, frag) {}
+
+
+void BlendShader::init() {}
+
+
+void BlendShader::render(unsigned int texture) {
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glDisable(GL_DEPTH_TEST);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    // glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+
+    glUseProgram(shaderProgram);
+    // glUniform1i(glGetUniformLocation(shaderProgram, "tex"), 0);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);   
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    glBindVertexArray(QUAD_VAO);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glBindVertexArray(0);
+}
+
+
+
 void Shader::initShader(ShaderArg* arg = nullptr) {
 
     geomShader = new GeomShader(GEOM_VERT, GEOM_FRAG);
     depthShader = new DepthShader(DEPTH_VERT, DEPTH_FRAG);
     shadowShader = new ShadowShader(SHADOW_VERT, SHADOW_FRAG);
     depthBackgroundShader = new DepthBackgroundShader(DEPTHBACKGROUND_VERT, DEPTHBACKGROUND_FRAG);
+    blendShader = new BlendShader(BLEND_VERT, BLEND_FRAG);
     displayShader = new DisplayShader(DISPLAY_VERT, DISPLAY_FRAG);
 
     glEnable(GL_DEPTH_TEST);
@@ -557,9 +588,10 @@ void Shader::initShader(ShaderArg* arg = nullptr) {
     depthBackgroundShader->init();
     cerr<<"shadowShader->init();"<<endl;
     shadowShader->init();
+    cerr<<"blendShader->init();"<<endl;
+    blendShader->init();
     cerr<<"displayShader->init();"<<endl;
     displayShader->init();
-
 }
 
 
@@ -582,7 +614,7 @@ void Shader::updateShader(ShaderArg* arg = nullptr) {
     depthShader->render();
     depthBackgroundShader->render(depthShader->gDepth, depthShader->gDepth2);
     shadowShader->render(geomShader->gPosition, depthBackgroundShader->gDepth, depthBackgroundShader->gDepth2);
-    displayShader->render(shadowShader->gShadow);
+    blendShader->render(shadowShader->gShadow);
     // displayShader->render(depthBackgroundShader->gDepth);
 
 }

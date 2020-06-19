@@ -119,10 +119,11 @@ public:
     virtual void updateShader(ShaderArg* arg);
 
     GeomShader *geomShader;
-    DisplayShader *displayShader;
     DepthShader *depthShader;
     ShadowShader *shadowShader;
     DepthBackgroundShader *depthBackgroundShader;
+    BlendShader *blendShader;
+    DisplayShader *displayShader;
 };
 
 

@@ -36,4 +36,4 @@
 
     Perform Blinn-Phong shading and apply shadow
 
-    Shadow, Normal -> Yeah!
+    Shadow, Normal, Color -> Yeah!
