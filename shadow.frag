@@ -55,6 +55,7 @@ void main() {
     float DEPTH_THRESHOLD = 0.01;
     float PERCENTAGE_ZERODIVISION = 0.0006;
     int BLOCKER_SEARCH_SAMPLE = 4; // 9*9
+    int PCF_SAMPLE = 4;
 
     // vec4 lightPosition = vec4(0,2,0,1);
     // float lightSize = 0.2;
@@ -103,22 +104,45 @@ void main() {
         filtersize = (receiverDepth - blockerAvgDepth) * lightSize / blockerAvgDepth;
         mipmapLevel = log2(filtersize * 768);
     } else {
+        filtersize = 1.0 / 768;
         mipmapLevel = 0; // filtersize cannot be 0, or, if no blocker then don't filter
     }
 
     // mipmapLevel = 0;
     
-    // float receiverDepth = texture(gDepth, shadowmapTexCoord).x;
-    float avgDepth = textureLod(gDepth, shadowmapTexCoord, mipmapLevel).x;
-    float avgDepth2 = textureLod(gDepth2, shadowmapTexCoord, mipmapLevel).x;
-    float varDepth = avgDepth2 - avgDepth * avgDepth;
 
-    float percentage;
-    if(receiverDepth - avgDepth > DEPTH_THRESHOLD) // shadow
-        percentage = (varDepth + PERCENTAGE_ZERODIVISION) / (varDepth + pow(lightSpacePosition.z - avgDepth, 2) + PERCENTAGE_ZERODIVISION);
-    else // this one-tailed Chebyshev's Ineq only works asssumes receiverDepth >= avgDepth
-        percentage = 1;
-    // I'm a genius!!!
+    // // Variance Soft Shadow
+
+    // // float receiverDepth = texture(gDepth, shadowmapTexCoord).x;
+    // float avgDepth = textureLod(gDepth, shadowmapTexCoord, mipmapLevel).x;
+    // float avgDepth2 = textureLod(gDepth2, shadowmapTexCoord, mipmapLevel).x;
+    // float varDepth = avgDepth2 - avgDepth * avgDepth;
+
+    // float percentage;
+    // if(receiverDepth - avgDepth > DEPTH_THRESHOLD) // shadow
+    //     percentage = (varDepth + PERCENTAGE_ZERODIVISION) / (varDepth + pow(lightSpacePosition.z - avgDepth, 2) + PERCENTAGE_ZERODIVISION);
+    // else // this one-tailed Chebyshev's Ineq only works asssumes receiverDepth >= avgDepth
+    //     percentage = 1;
+    // // I'm a genius!!!
+
+    // ////////////////////
+
+
+    float shadowSample = 0;
+    for(int i = -PCF_SAMPLE; i <= PCF_SAMPLE; i++) {
+        for(int j = -PCF_SAMPLE; j <= PCF_SAMPLE; j++) {
+            vec2 samplePosition = lightSpacePosition.xy + vec2(i,j) / PCF_SAMPLE * blockerSearchRegion;
+            vec2 sampleTexCoord = (samplePosition + vec2(1,1)) / 2;
+            float sampleDepth = texture(gDepth, sampleTexCoord).x;
+            // float sampleDistance = texture(gPosition, )
+            if(lightSpacePosition.z - sampleDepth > DEPTH_THRESHOLD) {
+                shadowSample += 1;
+            }
+        }
+    }
+    float percentage = 1 - shadowSample / 81;
+
+
 
     gShadowCoef = vec4(vec3(percentage), 1);
     // gShadowCoef = vec4(vec3(blockerAvgDepth), 1);

@@ -33,20 +33,20 @@ public:
         
         scene.light[0].position = Vector3f(0,2,0);
         // scene.light[0].displacement = Vector3f(0,0,0);
-        scene.light[0].size = 0.2;
-        scene.light[0].color = Color(1.0f, 1.0f, 1.0f, 1.0f);
+        scene.light[0].size = 0.05;
+        scene.light[0].color = Color(0.6f, 0.6f, 0.6f, 1.0f);
         scene.light[0].on = true;
 
         scene.light[1].position = Vector3f(0,3,0);
         // scene.light[1].displacement = Vector3f(0,0,0);
-        scene.light[1].size = 0.2;
-        scene.light[1].color = Color(1.0f, 1.0f, 1.0f, 1.0f);
+        scene.light[1].size = 0.05;
+        scene.light[1].color = Color(0.6f, 0.6f, 0.6f, 1.0f);
         scene.light[1].on = true;
 
         scene.light[2].position = Vector3f(0,5,0);
         // scene.light[2].displacement = Vector3f(0,0,0);
-        scene.light[2].size = 0.2;
-        scene.light[2].color = Color(1.0f, 1.0f, 1.0f, 1.0f);
+        scene.light[2].size = 0.05;
+        scene.light[2].color = Color(0.6f, 0.6f, 0.6f, 1.0f);
         scene.light[2].on = true;
 
         scene.shadowOn = true;
@@ -79,7 +79,7 @@ public:
         new Label(window, "size", "sans");
         Slider *slider0 = new Slider(window);
         slider0->setFixedSize(Vector2i(100, 20));
-        slider0->setValue(this->scene.light[0].size * 2);
+        slider0->setValue(this->scene.light[0].size / 0.2);
         slider0->setCallback([&](float value) {
             this->scene.light[0].size = value * 0.5;
         });
@@ -108,7 +108,7 @@ public:
         new Label(window, "size", "sans");
         Slider *slider1 = new Slider(window);
         slider1->setFixedSize(Vector2i(100, 20));
-        slider1->setValue(this->scene.light[1].size * 2);
+        slider1->setValue(this->scene.light[1].size / 0.2);
         slider1->setCallback([&](float value) {
             this->scene.light[1].size = value * 0.5;
         });
@@ -135,9 +135,9 @@ public:
         new Label(window, "size", "sans");
         Slider *slider2 = new Slider(window);
         slider2->setFixedSize(Vector2i(100, 20));
-        slider2->setValue(this->scene.light[2].size * 2);
+        slider2->setValue(this->scene.light[2].size / 0.2);
         slider2->setCallback([&](float value) {
-            this->scene.light[2].size = value * 0.5;
+            this->scene.light[2].size = value * 0.2;
         });
 
         CheckBox *checkbox2 = new CheckBox(window, "On/Off");
