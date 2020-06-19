@@ -37,16 +37,18 @@ public:
         scene.light[0].color = Color(1.0f, 1.0f, 1.0f, 1.0f);
         scene.light[0].on = true;
 
-        scene.light[1].position = Vector3f(1,2,0);
+        scene.light[1].position = Vector3f(0,2,0);
         // scene.light[1].displacement = Vector3f(0,0,0);
         scene.light[1].size = 0.2;
         scene.light[1].color = Color(1.0f, 1.0f, 1.0f, 1.0f);
+        scene.light[1].color = Color(0.0f, 0.0f, 0.0f, 1.0f);
         scene.light[1].on = true;
 
-        scene.light[2].position = Vector3f(0,2,1);
+        scene.light[2].position = Vector3f(0,2,0);
         // scene.light[2].displacement = Vector3f(0,0,0);
         scene.light[2].size = 0.2;
         scene.light[2].color = Color(1.0f, 1.0f, 1.0f, 1.0f);
+        scene.light[2].color = Color(0.0f, 0.0f, 0.0f, 1.0f);
         scene.light[2].on = true;
 
         scene.shadowOn = true;

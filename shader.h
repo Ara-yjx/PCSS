@@ -71,7 +71,7 @@ public:
     unsigned int gShadow;
     ShadowShader();
     void init();    
-    void render(unsigned int gPosition, unsigned int gShadowmap, unsigned int gShadowmap2);
+    void render(Light light, unsigned int gPosition, unsigned int gShadowmap, unsigned int gShadowmap2);
 };
 
 

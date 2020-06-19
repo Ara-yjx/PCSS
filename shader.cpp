@@ -475,7 +475,7 @@ void ShadowShader::init() {
 }
 
 
-void ShadowShader::render(unsigned int gPosition, unsigned int gDepth, unsigned int gDepth2) {
+void ShadowShader::render(Light light, unsigned int gPosition, unsigned int gDepth, unsigned int gDepth2) {
     glBindFramebuffer(GL_FRAMEBUFFER, this->FBO);
     glDisable(GL_DEPTH_TEST);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -485,6 +485,9 @@ void ShadowShader::render(unsigned int gPosition, unsigned int gDepth, unsigned 
     glUniform1i(glGetUniformLocation(shaderProgram, "gPosition"), 0);
     glUniform1i(glGetUniformLocation(shaderProgram, "gDepth"), 1);
     glUniform1i(glGetUniformLocation(shaderProgram, "gDepth2"), 2);
+
+    glUniform3f(glGetUniformLocation(shaderProgram, "lightPosition"), light.position.x(), light.position.y(), light.position.z());
+    // glUniform3f(glGetUniformLocation(shaderProgram, "lightColor"), light.color.r(), light.color.g(), light.color.b());
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, gPosition);
@@ -541,32 +544,35 @@ void BlendShader::render(Scene scene, unsigned int gPosition, unsigned int gNorm
     glUniform1i(glGetUniformLocation(shaderProgram, "gShadow1"), 4);
     glUniform1i(glGetUniformLocation(shaderProgram, "gShadow2"), 5);
 
-    float lightPos[9];
-    lightPos[0] = scene.light[0].position.x();
-    lightPos[1] = scene.light[0].position.y();
-    lightPos[2] = scene.light[0].position.z();
-    lightPos[3] = scene.light[1].position.x();
-    lightPos[4] = scene.light[1].position.y();
-    lightPos[5] = scene.light[1].position.z();
-    lightPos[6] = scene.light[2].position.x();
-    lightPos[7] = scene.light[2].position.y();
-    lightPos[8] = scene.light[2].position.z();
+    // float lightPos[9];
+    // lightPos[0] = scene.light[0].position.x();
+    // lightPos[1] = scene.light[0].position.y();
+    // lightPos[2] = scene.light[0].position.z();
+    // lightPos[3] = scene.light[1].position.x();
+    // lightPos[4] = scene.light[1].position.y();
+    // lightPos[5] = scene.light[1].position.z();
+    // lightPos[6] = scene.light[2].position.x();
+    // lightPos[7] = scene.light[2].position.y();
+    // lightPos[8] = scene.light[2].position.z();
+    float lightPos[] = {0,2,0,0,2,0,0,2,0};
     glUniform3fv(glGetUniformLocation(shaderProgram, "lightPosition"), 3, lightPos);
-    float lightColor[9];
-    lightColor[0] = scene.light[0].color.r();
-    lightColor[1] = scene.light[0].color.g();
-    lightColor[2] = scene.light[0].color.b();
-    lightColor[3] = scene.light[1].color.r();
-    lightColor[4] = scene.light[1].color.g();
-    lightColor[5] = scene.light[1].color.b();
-    lightColor[6] = scene.light[2].color.r();
-    lightColor[7] = scene.light[2].color.g();
-    lightColor[8] = scene.light[2].color.b();
+    // float lightColor[9];
+    // lightColor[0] = scene.light[0].color.r();
+    // lightColor[1] = scene.light[0].color.g();
+    // lightColor[2] = scene.light[0].color.b();
+    // lightColor[3] = scene.light[1].color.r();
+    // lightColor[4] = scene.light[1].color.g();
+    // lightColor[5] = scene.light[1].color.b();
+    // lightColor[6] = scene.light[2].color.r();
+    // lightColor[7] = scene.light[2].color.g();
+    // lightColor[8] = scene.light[2].color.b();
+    float lightColor[] = {1,1,1,1,1,1,1,1,1};
     glUniform3fv(glGetUniformLocation(shaderProgram, "lightColor"), 3, lightColor);
-    int lightOn[3];
-    lightPos[0] = scene.light[0].on ? 1:0;
-    lightPos[1] = scene.light[1].on ? 1:0;
-    lightPos[2] = scene.light[2].on ? 1:0;
+    // int lightOn[3];
+    // lightPos[0] = scene.light[0].on ? 1:0;
+    // lightPos[1] = scene.light[1].on ? 1:0;
+    // lightPos[2] = scene.light[2].on ? 1:0;
+    int lightOn[] = {1,1,1};
     glUniform1iv(glGetUniformLocation(shaderProgram, "lightOn"), 3, lightOn);
 
     glUniform1i(glGetUniformLocation(shaderProgram, "shadowSwitch"), scene.shadowOn);
@@ -622,15 +628,6 @@ void BlendShader::render(Scene scene, unsigned int gPosition, unsigned int gNorm
 
 void Shader::initShader() {
 
-    geomShader = new GeomShader();
-    for(int i = 0; i < 3; i++) {
-        depthShader[i] = new DepthShader;
-        depthBackgroundShader[i] = new DepthBackgroundShader;
-        shadowShader[i] = new ShadowShader;
-    }
-    blendShader = new BlendShader();
-    displayShader = new DisplayShader();
-
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
@@ -664,21 +661,23 @@ void Shader::initShader() {
     for(int i = 0; i < 6*7; i++)
         vertices.push_back(ground[i]);
     
-
-    cerr<<"initQuad();"<<endl;
     initQuad();
-    cerr<<"geomShader->init(vertices, indices);"<<endl;
+
+    geomShader = new GeomShader();
     geomShader->init(vertices); 
-    cerr<<"depthShader->init();"<<endl;
-    depthShader[0]->init(vertices);
-    cerr<<"depthBackgroundShader->init();"<<endl;
-    depthBackgroundShader[0]->init();
-    cerr<<"shadowShader->init();"<<endl;
-    shadowShader[0]->init();
-    cerr<<"blendShader->init();"<<endl;
+    for(int i = 0; i < 3; i++) {
+        depthShader[i] = new DepthShader;
+        depthShader[i]->init(vertices);
+        depthBackgroundShader[i] = new DepthBackgroundShader;
+        depthBackgroundShader[i]->init();
+        shadowShader[i] = new ShadowShader;
+        shadowShader[i]->init();
+    }
+    blendShader = new BlendShader();
     blendShader->init();
-    cerr<<"displayShader->init();"<<endl;
+    displayShader = new DisplayShader();
     displayShader->init();
+
 }
 
 
@@ -690,10 +689,12 @@ void Shader::updateShader(Scene scene) {
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
     geomShader->render(scene);
-    depthShader[0]->render(scene.light[0]);
-    depthBackgroundShader[0]->render(depthShader[0]->gDepth, depthShader[0]->gDepth2);
-    shadowShader[0]->render(geomShader->gPosition, depthBackgroundShader[0]->gDepth, depthBackgroundShader[0]->gDepth2);
-    blendShader->render(scene, geomShader->gPosition, geomShader->gNormal, geomShader->gColor, shadowShader[0]->gShadow, shadowShader[0]->gShadow, shadowShader[0]->gShadow);
+    for(int i = 0; i < 3; i++) {
+        depthShader[i]->render(scene.light[i]);
+        depthBackgroundShader[i]->render(depthShader[i]->gDepth, depthShader[i]->gDepth2);
+        shadowShader[i]->render(scene.light[i], geomShader->gPosition, depthBackgroundShader[i]->gDepth, depthBackgroundShader[i]->gDepth2);
+    }
+    blendShader->render(scene, geomShader->gPosition, geomShader->gNormal, geomShader->gColor, shadowShader[0]->gShadow, shadowShader[1]->gShadow, shadowShader[2]->gShadow);
     // displayShader->render(shadowShader->gShadow);
 
 }

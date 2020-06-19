@@ -17,8 +17,8 @@ uniform int shadowSwitch;
 
 void main() {
     float ambientCoef = 0.05;
-    float diffuseCoef = 0.85;
-    float specularCoef = 1.0;
+    float diffuseCoef = 0.85 / 3;
+    float specularCoef = 1.0 / 3;
     float specularExp = 20;
 
     vec4 Position = texture(gPosition, TexCoords);

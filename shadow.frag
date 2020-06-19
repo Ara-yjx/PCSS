@@ -8,10 +8,9 @@ uniform sampler2D gPosition;
 uniform sampler2D gDepth;
 uniform sampler2D gDepth2;
 
+uniform vec3 lightPosition;
 
 mat4 projection() {
-
-    vec3 lightPosition = vec3(0,2,0);
 
     mat4 centerLight = mat4(
         1,0,0,0,
