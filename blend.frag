@@ -45,7 +45,7 @@ void main() {
             if(shadowSwitch == 1)
                 shadowCoef = Shadow[l].x;
 
-            fragColor += ambientCoef * vec4(1) + shadowCoef * (diffuseCoef * diffuse + specularCoef * specular);
+            fragColor += shadowCoef * (diffuseCoef * diffuse + specularCoef * specular);
             // if(shadowCoef > 1)
             //     FragColor = vec4(1,0,0,1);
         }

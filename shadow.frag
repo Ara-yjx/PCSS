@@ -9,6 +9,7 @@ uniform sampler2D gDepth;
 uniform sampler2D gDepth2;
 
 uniform vec3 lightPosition;
+uniform float lightSize;
 
 mat4 projection() {
 
@@ -55,8 +56,8 @@ void main() {
     float PERCENTAGE_ZERODIVISION = 0.0006;
     int BLOCKER_SEARCH_SAMPLE = 4; // 9*9
 
-    vec4 lightPosition = vec4(0,2,0,1);
-    float lightSize = 0.2;
+    // vec4 lightPosition = vec4(0,2,0,1);
+    // float lightSize = 0.2;
     float n = 1;
     float f = 5;
     float screenDepth = 1.0/f; // depth of screen, after othro projection
@@ -105,8 +106,7 @@ void main() {
         mipmapLevel = 0; // filtersize cannot be 0, or, if no blocker then don't filter
     }
 
-    // float filtersize = 0.02;
-    // mipmapLevel = 2;
+    // mipmapLevel = 0;
     
     // float receiverDepth = texture(gDepth, shadowmapTexCoord).x;
     float avgDepth = textureLod(gDepth, shadowmapTexCoord, mipmapLevel).x;

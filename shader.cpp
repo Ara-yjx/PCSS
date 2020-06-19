@@ -487,6 +487,7 @@ void ShadowShader::render(Light light, unsigned int gPosition, unsigned int gDep
     glUniform1i(glGetUniformLocation(shaderProgram, "gDepth2"), 2);
 
     glUniform3f(glGetUniformLocation(shaderProgram, "lightPosition"), light.position.x(), light.position.y(), light.position.z());
+    glUniform1f(glGetUniformLocation(shaderProgram, "lightSize"), light.size);
     // glUniform3f(glGetUniformLocation(shaderProgram, "lightColor"), light.color.r(), light.color.g(), light.color.b());
 
     glActiveTexture(GL_TEXTURE0);
@@ -512,8 +513,8 @@ void ShadowShader::render(Light light, unsigned int gPosition, unsigned int gDep
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);   
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTextureParameteri(gDepth, GL_TEXTURE_BASE_LEVEL, 0);
-    glTextureParameteri(gDepth, GL_TEXTURE_MAX_LEVEL, 10);
+    glTextureParameteri(gDepth2, GL_TEXTURE_BASE_LEVEL, 0);
+    glTextureParameteri(gDepth2, GL_TEXTURE_MAX_LEVEL, 10);
     glGenerateMipmap(GL_TEXTURE_2D);
 
     glBindVertexArray(QUAD_VAO);
@@ -544,35 +545,38 @@ void BlendShader::render(Scene scene, unsigned int gPosition, unsigned int gNorm
     glUniform1i(glGetUniformLocation(shaderProgram, "gShadow1"), 4);
     glUniform1i(glGetUniformLocation(shaderProgram, "gShadow2"), 5);
 
-    // float lightPos[9];
-    // lightPos[0] = scene.light[0].position.x();
-    // lightPos[1] = scene.light[0].position.y();
-    // lightPos[2] = scene.light[0].position.z();
-    // lightPos[3] = scene.light[1].position.x();
-    // lightPos[4] = scene.light[1].position.y();
-    // lightPos[5] = scene.light[1].position.z();
-    // lightPos[6] = scene.light[2].position.x();
-    // lightPos[7] = scene.light[2].position.y();
-    // lightPos[8] = scene.light[2].position.z();
-    float lightPos[] = {0,2,0,0,2,0,0,2,0};
+    float lightPos[9];
+    lightPos[0] = scene.light[0].position.x();
+    lightPos[1] = scene.light[0].position.y();
+    lightPos[2] = scene.light[0].position.z();
+    lightPos[3] = scene.light[1].position.x();
+    lightPos[4] = scene.light[1].position.y();
+    lightPos[5] = scene.light[1].position.z();
+    lightPos[6] = scene.light[2].position.x();
+    lightPos[7] = scene.light[2].position.y();
+    lightPos[8] = scene.light[2].position.z();
+    // float lightPos[] = {0,2,0,0,2,0,0,2,0};
     glUniform3fv(glGetUniformLocation(shaderProgram, "lightPosition"), 3, lightPos);
-    // float lightColor[9];
-    // lightColor[0] = scene.light[0].color.r();
-    // lightColor[1] = scene.light[0].color.g();
-    // lightColor[2] = scene.light[0].color.b();
-    // lightColor[3] = scene.light[1].color.r();
-    // lightColor[4] = scene.light[1].color.g();
-    // lightColor[5] = scene.light[1].color.b();
-    // lightColor[6] = scene.light[2].color.r();
-    // lightColor[7] = scene.light[2].color.g();
-    // lightColor[8] = scene.light[2].color.b();
-    float lightColor[] = {1,1,1,1,1,1,1,1,1};
+    float lightColor[9];
+    lightColor[0] = scene.light[0].color.r();
+    lightColor[1] = scene.light[0].color.g();
+    lightColor[2] = scene.light[0].color.b();
+    lightColor[3] = scene.light[1].color.r();
+    lightColor[4] = scene.light[1].color.g();
+    lightColor[5] = scene.light[1].color.b();
+    lightColor[6] = scene.light[2].color.r();
+    lightColor[7] = scene.light[2].color.g();
+    lightColor[8] = scene.light[2].color.b();
+    // float lightColor[] = {1,1,1,1,1,1,1,1,1};
     glUniform3fv(glGetUniformLocation(shaderProgram, "lightColor"), 3, lightColor);
-    // int lightOn[3];
-    // lightPos[0] = scene.light[0].on ? 1:0;
-    // lightPos[1] = scene.light[1].on ? 1:0;
-    // lightPos[2] = scene.light[2].on ? 1:0;
-    int lightOn[] = {1,1,1};
+    int lightOn[3];
+    lightOn[0] = scene.light[0].on ? 1:0;
+    lightOn[1] = scene.light[1].on ? 1:0;
+    lightOn[2] = scene.light[2].on ? 1:0;
+    // cout<<lightPos[0]<<lightPos[1]<<lightPos[2]<<endl;
+    // int lightOn[] = {1,1,1};
+    // cout<<lightPos[0]<<endl;
+
     glUniform1iv(glGetUniformLocation(shaderProgram, "lightOn"), 3, lightOn);
 
     glUniform1i(glGetUniformLocation(shaderProgram, "shadowSwitch"), scene.shadowOn);
