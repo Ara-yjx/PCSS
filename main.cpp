@@ -7,6 +7,8 @@
 using namespace nanogui;
 using std::cout;
 using std::endl;
+using std::string;
+using std::to_string;
 using Eigen::Vector3f;
 
 
@@ -19,6 +21,7 @@ public:
     float bracketState = 0;
     float bracketStateSmooth = 0;
     int moveTarget = 0;
+    Label *label[3];
 
     // nanogui::GLShader mShader;
     
@@ -62,6 +65,9 @@ public:
         });
 
         new Label(window, "Light 0", "sans-bold");
+        label[0] = new Label(window, "Pos (" + to_string(scene.light[0].position.x()) + "," + 
+            to_string(scene.light[0].position.y()) + "," + 
+            to_string(scene.light[0].position.z()) + ")" , "sans");
 
         ColorPicker *color0 = new ColorPicker(window, {255, 120, 0, 255});
         color0->setFixedSize({100, 20});
@@ -70,6 +76,7 @@ public:
             cout<<scene.light[0].color<<endl;
         });
 
+        new Label(window, "size", "sans");
         Slider *slider0 = new Slider(window);
         slider0->setFixedSize(Vector2i(100, 20));
         slider0->setValue(this->scene.light[0].size * 2);
@@ -86,6 +93,11 @@ public:
         
 
         new Label(window, "Light 1", "sans-bold");
+        label[1] = new Label(window, "Pos (" + to_string(scene.light[1].position.x()) + "," + 
+            to_string(scene.light[1].position.y()) + "," + 
+            to_string(scene.light[1].position.z()) + ")" , "sans");
+
+        
 
         ColorPicker *color1 = new ColorPicker(window, {255, 120, 0, 255});
         color1->setFixedSize({100, 20});
@@ -93,6 +105,7 @@ public:
             this->scene.light[1].color = c;
         });
 
+        new Label(window, "size", "sans");
         Slider *slider1 = new Slider(window);
         slider1->setFixedSize(Vector2i(100, 20));
         slider1->setValue(this->scene.light[1].size * 2);
@@ -109,6 +122,9 @@ public:
 
 
         new Label(window, "Light 2", "sans-bold");
+        label[2] = new Label(window, "Pos (" + to_string(scene.light[2].position.x()) + "," + 
+            to_string(scene.light[2].position.y()) + "," + 
+            to_string(scene.light[2].position.z()) + ")" , "sans");
 
         ColorPicker *color2 = new ColorPicker(window, {255, 120, 0, 255});
         color2->setFixedSize({100, 20});
@@ -116,6 +132,7 @@ public:
             this->scene.light[2].color = c;
         });
 
+        new Label(window, "size", "sans");
         Slider *slider2 = new Slider(window);
         slider2->setFixedSize(Vector2i(100, 20));
         slider2->setValue(this->scene.light[2].size * 2);
@@ -173,23 +190,34 @@ public:
         // WASD
         if (key == GLFW_KEY_W && action == GLFW_PRESS) {
             auto pos = &(scene.light[moveTarget].position);
-            cout<<*pos<<endl;
             pos->z() += pos->y() / 3.0;
+            label[moveTarget]->setCaption("Pos (" + to_string(scene.light[moveTarget].position.x()) + "," + 
+            to_string(scene.light[moveTarget].position.y()) + "," + 
+            to_string(scene.light[moveTarget].position.z()) + ")");
             return true;
         }
         if (key == GLFW_KEY_S && action == GLFW_PRESS) {
             auto pos = &(scene.light[moveTarget].position);
             pos->z() -= pos->y() / 3;
+            label[moveTarget]->setCaption("Pos (" + to_string(scene.light[moveTarget].position.x()) + "," + 
+            to_string(scene.light[moveTarget].position.y()) + "," + 
+            to_string(scene.light[moveTarget].position.z()) + ")");
             return true;
         }
         if (key == GLFW_KEY_A && action == GLFW_PRESS) {
             auto pos = &(scene.light[moveTarget].position);
             pos->x() -= pos->y() / 3;
+            label[moveTarget]->setCaption("Pos (" + to_string(scene.light[moveTarget].position.x()) + "," + 
+            to_string(scene.light[moveTarget].position.y()) + "," + 
+            to_string(scene.light[moveTarget].position.z()) + ")");
             return true;
         }
         if (key == GLFW_KEY_D && action == GLFW_PRESS) {
             auto pos = &(scene.light[moveTarget].position);
             pos->x() += pos->y() / 3;
+            label[moveTarget]->setCaption("Pos (" + to_string(scene.light[moveTarget].position.x()) + "," + 
+            to_string(scene.light[moveTarget].position.y()) + "," + 
+            to_string(scene.light[moveTarget].position.z()) + ")");
             return true;
         }
         // // < >
