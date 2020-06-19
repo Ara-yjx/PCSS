@@ -54,6 +54,7 @@ mat4 projection() {
 void main() {
     float DEPTH_THRESHOLD = 0.01;
     float PERCENTAGE_ZERODIVISION = 0.0006;
+    int BLOCKER_SEARCH_SAMPLE = 4; // 9*9
 
     vec4 lightPosition = vec4(0,2,0,1);
     float lightSize = 0.2;
@@ -71,20 +72,40 @@ void main() {
 
 
     // Filter size
-    // float lightDistance = length((lightPosition - Position).xyz);
-    float lightDistance = lightSpacePosition.z;
-    // float lightDistance = textureLod(gDepth, shadowmapTexCoord, 0).x;
-    float blockerSearchRegion = lightSize / lightDistance * (lightDistance - screenDepth);
-    float blockerSearchMipmapLevel = log2(blockerSearchRegion * 768);
-    float blockerAvgDepth = textureLod(gDepth, shadowmapTexCoord, blockerSearchMipmapLevel).x;
+    // float receiverDepth = length((lightPosition - Position).xyz);
+    float receiverDepth = lightSpacePosition.z;
+    // float receiverDepth = textureLod(gDepth, shadowmapTexCoord, 0).x;
+    float blockerSearchRegion = lightSize / receiverDepth * (receiverDepth - screenDepth);
+    // float blockerSearchMipmapLevel = log2(blockerSearchRegion * 768);
+    int blockerNum = 0;
+    float blockerTotalDepth = 0.0;
+    for(int i = -BLOCKER_SEARCH_SAMPLE; i <= BLOCKER_SEARCH_SAMPLE; i++) {
+        for(int j = -BLOCKER_SEARCH_SAMPLE; j <= BLOCKER_SEARCH_SAMPLE; j++) {
+            vec2 samplePosition = lightSpacePosition.xy + vec2(i,j) / BLOCKER_SEARCH_SAMPLE * blockerSearchRegion;
+            vec2 sampleTexCoord = (samplePosition + vec2(1,1)) / 2;
+            float sampleDepth = texture(gDepth, sampleTexCoord).x;
+            if(receiverDepth - sampleDepth > DEPTH_THRESHOLD) {
+                blockerNum += 1;
+                blockerTotalDepth += sampleDepth;
+            }
+        }
+    }
+    float blockerAvgDepth;
+    if(blockerNum != 0) 
+        blockerAvgDepth = blockerTotalDepth / blockerNum;
+    else
+        blockerAvgDepth = 1000;
+    
+    // float blockerAvgDepth = textureLod(gDepth, shadowmapTexCoord, blockerSearchMipmapLevel).x;
     
     float filtersize, mipmapLevel;
-    if(lightDistance > blockerAvgDepth) {
-        filtersize = (lightDistance - blockerAvgDepth) * lightSize / blockerAvgDepth;
+    if(receiverDepth > blockerAvgDepth) {
+        filtersize = (receiverDepth - blockerAvgDepth) * lightSize / blockerAvgDepth;
         mipmapLevel = log2(filtersize * 768);
     } else {
         mipmapLevel = 0; // filtersize cannot be 0, or, if no blocker then don't filter
     }
+
     // float filtersize = 0.02;
     // mipmapLevel = 2;
     
@@ -94,16 +115,14 @@ void main() {
     float varDepth = avgDepth2 - avgDepth * avgDepth;
 
     float percentage;
-    if(lightSpacePosition.z - avgDepth > DEPTH_THRESHOLD) // shadow
+    if(receiverDepth - avgDepth > DEPTH_THRESHOLD) // shadow
         percentage = (varDepth + PERCENTAGE_ZERODIVISION) / (varDepth + pow(lightSpacePosition.z - avgDepth, 2) + PERCENTAGE_ZERODIVISION);
     else // this one-tailed Chebyshev's Ineq only works asssumes receiverDepth >= avgDepth
         percentage = 1;
     // I'm a genius!!!
 
     gShadowCoef = vec4(vec3(percentage), 1);
+    // gShadowCoef = vec4(vec3(blockerAvgDepth), 1);
     // gShadowCoef = vec4(vec3(mipmapLevel/10), 1);
     // gShadowCoef = vec4(vec3(abs(varDepth)*100), 1);
-    // gShadowCoef = vec4(vec3(avgDepth2)/10000, 1);
-
-    // gShadowCoef = vec4(texture(gDepth, TexCoords).xyz, 1);
 }

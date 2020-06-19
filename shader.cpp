@@ -598,11 +598,12 @@ void Shader::initShader(ShaderArg* arg = nullptr) {
     vector<unsigned int> indices;
     loadModel(DEFAULT_MODEL, vertices, indices);
 
-    // for(int i = 0; i < vertices.size() / 6; i++) {
-    //     vertices[i*6] /= 2;
-    //     vertices[i*6+1] /= 2;
-    //     vertices[i*6+2] /= 2;
-    // }
+    for(int i = 0; i < vertices.size() / 6; i++) {
+        // vertices[i*6] /= 2;
+        // vertices[i*6+1] /= 2;
+        // vertices[i*6+2] /= 2;
+        vertices[i*6+2] -= 0.5;
+    }
 
     // Add round
     float ground[] = {
