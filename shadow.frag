@@ -2,7 +2,7 @@
 in vec2 TexCoords;
 
 // layout (location = 0) out vec4 FragColor;
-out vec4 FragColor;
+out vec4 gShadowCoef;
 
 uniform sampler2D gPosition;
 uniform sampler2D gDepth;
@@ -58,20 +58,21 @@ void main() {
     // To light space
     vec4 lightSpacePosition = projection() * Position;
     lightSpacePosition = lightSpacePosition / lightSpacePosition.w;
-    // Get depth
+    // Get depth coord
     vec2 shadowmapTexCoord = (lightSpacePosition.xy + vec2(1,1)) / 2; // map[-1,1]->[0,1]
-    float shadowmapDepth = texture(gDepth2, shadowmapTexCoord).x;
-    // float shadowmapDepth = textureLod(gDepth, shadowmapTexCoord, 3).x;
 
-    if(shadowmapDepth < lightSpacePosition.z*lightSpacePosition.z - DEPTH_THRESHOLD) {
-        FragColor = vec4(0,0,0,1);
-    }
-    else {
-        FragColor = vec4(1);
-    }
-    FragColor = texture(gDepth2, shadowmapTexCoord);
-    // FragColor = vec4(vec3(shadowmapDepth), 1);
-    // FragColor = (vec4(shadowmapTexCoord,0, 1));
-    // FragColor = texture(gDepth, TexCoords) / 5;
-    // FragColor = (vec4(vec3(shadowmapTexCoord.x), 1));
+
+    float filtersize = 0.02;
+    float mipmapLevel = log2(filtersize * 768);
+
+    // float receiverDepth = texture(gDepth, shadowmapTexCoord).x;
+    float avgDepth = textureLod(gDepth, shadowmapTexCoord, mipmapLevel).x;
+    float avgDepth2 = textureLod(gDepth2, shadowmapTexCoord, mipmapLevel).x;
+    float varDepth = avgDepth2 - avgDepth * avgDepth;
+
+    float percentage = varDepth / (varDepth + (lightSpacePosition.z - avgDepth) * (lightSpacePosition.z - avgDepth));
+
+    // gShadowCoef = vec4(vec3(abs(varDepth)*50), 1);
+    gShadowCoef = vec4(vec3(percentage), 1);
+    // gShadowCoef = vec4(texture(gDepth, TexCoords).xyz, 1);
 }

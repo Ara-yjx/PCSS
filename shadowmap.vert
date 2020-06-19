@@ -54,10 +54,10 @@ void main(){
    
     homoPos = projection() * homoPos;
 
-    homoPos = homoPos / homoPos.w;
+    homoPos /= homoPos.w;
 
     gl_Position = homoPos;
 
-    Depth = gl_Position.z;
-    
+    Depth = homoPos.z;
+
 }  

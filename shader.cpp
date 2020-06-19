@@ -27,6 +27,8 @@ const string GEOM_VERT = "../geom.vert";
 const string GEOM_FRAG = "../geom.frag";
 const string SHADOWMAP_VERT = "../shadowmap.vert";
 const string SHADOWMAP_FRAG = "../shadowmap.frag";
+const string DEPTHBACKGROUND_VERT = "../depthbackground.vert";
+const string DEPTHBACKGROUND_FRAG = "../depthbackground.frag";
 // const string BLEND_VERT = "../blend.vert";
 // const string BLEND_FRAG = "../blend.frag";
 const string DISPLAY_VERT = "../display.vert";
@@ -288,6 +290,14 @@ ShadowmapShader::ShadowmapShader(string vert, string frag): BaseShader(vert, fra
 void ShadowmapShader::init(vector<float> vertices) {
     this->vertices = vertices;
 
+    // // init gDepth to 1000, gDepth2 to 1000000
+    // this->gDepthInitData = new float[768*768*4];
+    // for(int i = 0; i < 768*768*4; i++)
+    //     gDepthInitData[i] = 1000;
+    // this->gDepth2InitData = new float[768*768*4];
+    // for(int i = 0; i < 768*768*4; i++)
+    //     gDepth2InitData[i] = 1000000;
+
     // VBO
     glGenBuffers(1, &(this->VBO)); // create a buffer object with ID
     glBindBuffer(GL_ARRAY_BUFFER, this->VBO); // let the buffer be a VBO buffer 
@@ -357,6 +367,73 @@ void ShadowmapShader::render() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
+
+DepthBackgroundShader::DepthBackgroundShader(string vert, string frag): BaseShader(vert, frag) {}
+
+
+void DepthBackgroundShader::init() {
+    // FBO
+    glGenFramebuffers(1, &this->FBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+
+    glGenTextures(1, &gDepth);
+    glBindTexture(GL_TEXTURE_2D, gDepth);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, 768, 768, 0, GL_RGB, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gDepth, 0);
+
+    glGenTextures(1, &gDepth2);
+    glBindTexture(GL_TEXTURE_2D, gDepth2);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, 768, 768, 0, GL_RGB, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gDepth2, 0);
+
+    unsigned int attachments[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+    glDrawBuffers(2, attachments);
+
+    // RBO (depth & stencil buffer)
+    glGenRenderbuffers(1, &RBO);
+    glBindRenderbuffer(GL_RENDERBUFFER, RBO);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 768, 768);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RBO);
+    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        cout << "ERROR Framebuffer error." << endl;
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+
+void DepthBackgroundShader::render(unsigned int gDepth, unsigned int gDepth2) {
+    glBindFramebuffer(GL_FRAMEBUFFER, this->FBO);
+    glDisable(GL_DEPTH_TEST);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    // glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+
+    glUseProgram(shaderProgram);
+    glUniform1i(glGetUniformLocation(shaderProgram, "gDepth"), 0);
+    glUniform1i(glGetUniformLocation(shaderProgram, "gDepth2"), 1);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, gDepth);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);   
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, gDepth2);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);   
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    glBindVertexArray(QUAD_VAO);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glBindVertexArray(0);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
 
 ShadowShader::ShadowShader(string vert, string frag): BaseShader(vert, frag) {}
 
@@ -441,6 +518,7 @@ void Shader::initShader(ShaderArg* arg = nullptr) {
     geomShader = new GeomShader(GEOM_VERT, GEOM_FRAG);
     shadowmapShader = new ShadowmapShader(SHADOWMAP_VERT, SHADOWMAP_FRAG);
     shadowShader = new ShadowShader(SHADOW_VERT, SHADOW_FRAG);
+    depthBackgroundShader = new DepthBackgroundShader(DEPTHBACKGROUND_VERT, DEPTHBACKGROUND_FRAG);
     displayShader = new DisplayShader(DISPLAY_VERT, DISPLAY_FRAG);
 
     glEnable(GL_DEPTH_TEST);
@@ -475,6 +553,8 @@ void Shader::initShader(ShaderArg* arg = nullptr) {
     geomShader->init(vertices, indices); 
     cerr<<"shadowmapShader->init();"<<endl;
     shadowmapShader->init(vertices);
+    cerr<<"depthBackgroundShader->init();"<<endl;
+    depthBackgroundShader->init();
     cerr<<"shadowShader->init();"<<endl;
     shadowShader->init();
     cerr<<"displayShader->init();"<<endl;
@@ -500,8 +580,10 @@ void Shader::updateShader(ShaderArg* arg = nullptr) {
 
     geomShader->render(sceneRotationY, sceneRotationX);
     shadowmapShader->render();
-    shadowShader->render(geomShader->gPosition, shadowmapShader->gDepth, shadowmapShader->gDepth2);
+    depthBackgroundShader->render(shadowmapShader->gDepth, shadowmapShader->gDepth2);
+    shadowShader->render(geomShader->gPosition, depthBackgroundShader->gDepth, depthBackgroundShader->gDepth2);
     displayShader->render(shadowShader->gShadow);
+    // displayShader->render(depthBackgroundShader->gDepth);
 
 }
 
