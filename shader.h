@@ -28,7 +28,7 @@ public:
     unsigned int VAO, VBO, FBO, RBO;
     unsigned int gPosition, gNormal, gColor;
 
-    GeomShader(std::string vert, std::string frag);
+    GeomShader();
 
     void init(std::vector<float> vertices);
     void render(Scene scene);
@@ -57,7 +57,7 @@ public:
     // const static size_t stride = 6;
     unsigned int VAO, VBO, FBO, RBO;
     unsigned int gDepth, gDepth2;
-    DepthBackgroundShader(std::string vert, std::string frag);
+    DepthBackgroundShader();
 
     void init();
     void render(unsigned int gDepth, unsigned int gDepth2);
@@ -69,7 +69,7 @@ class ShadowShader: public BaseShader {
 public:
     unsigned int FBO, RBO;
     unsigned int gShadow;
-    ShadowShader(std::string vert, std::string frag);
+    ShadowShader();
     void init();    
     void render(unsigned int gPosition, unsigned int gShadowmap, unsigned int gShadowmap2);
 };
@@ -78,7 +78,7 @@ public:
 
 class DisplayShader: public BaseShader {
 public:
-    DisplayShader(std::string vert, std::string frag);
+    DisplayShader();
     void init();    
     void render(unsigned int texture);
 };
@@ -87,7 +87,7 @@ public:
 
 class BlendShader: public BaseShader {
 public:
-    BlendShader(std::string vert, std::string frag);
+    BlendShader();
     void init();    
     void render(Scene scene, unsigned int gPosition, unsigned int gNormal, unsigned int gColor, unsigned int gShadow);
 };
@@ -100,9 +100,9 @@ public:
     virtual void updateShader(Scene scene);
 
     GeomShader *geomShader;
-    DepthShader depthShader[3];
-    ShadowShader *shadowShader;
-    DepthBackgroundShader *depthBackgroundShader;
+    DepthShader *depthShader[3];
+    DepthBackgroundShader *depthBackgroundShader[3];
+    ShadowShader *shadowShader[3];
     BlendShader *blendShader;
     DisplayShader *displayShader;
 };

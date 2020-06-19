@@ -168,12 +168,15 @@ BaseShader::BaseShader(string vert, string frag) {
 }
 
 
-GeomShader::GeomShader(string vert, string frag): BaseShader(vert, frag) {}
+GeomShader::GeomShader(): BaseShader(GEOM_VERT, GEOM_FRAG) {}
 
 
 void GeomShader::init(vector<float> vertices) {
     cout<<vertices.size()<<endl;
     this->vertices = vertices;
+
+    cout<<this->vertices.size()<<endl;
+    
 
     // VBO
     glGenBuffers(1, &(this->VBO)); // create a buffer object with ID
@@ -260,7 +263,7 @@ void GeomShader::render(Scene scene) {
 }
 
 
-DisplayShader::DisplayShader(string vert, string frag): BaseShader(vert, frag) {}
+DisplayShader::DisplayShader(): BaseShader(DISPLAY_VERT, DISPLAY_FRAG) {}
 
 
 void DisplayShader::init() {}
@@ -372,7 +375,7 @@ void DepthShader::render(Light light) {
 }
 
 
-DepthBackgroundShader::DepthBackgroundShader(string vert, string frag): BaseShader(vert, frag) {}
+DepthBackgroundShader::DepthBackgroundShader(): BaseShader(DEPTHBACKGROUND_VERT, DEPTHBACKGROUND_FRAG) {}
 
 
 void DepthBackgroundShader::init() {
@@ -440,7 +443,7 @@ void DepthBackgroundShader::render(unsigned int gDepth, unsigned int gDepth2) {
 }
 
 
-ShadowShader::ShadowShader(string vert, string frag): BaseShader(vert, frag) {}
+ShadowShader::ShadowShader(): BaseShader(SHADOW_VERT, SHADOW_FRAG) {}
 
 
 void ShadowShader::init() {
@@ -518,7 +521,7 @@ void ShadowShader::render(unsigned int gPosition, unsigned int gDepth, unsigned 
 }
 
 
-BlendShader::BlendShader(string vert, string frag): BaseShader(vert, frag) {}
+BlendShader::BlendShader(): BaseShader(BLEND_VERT, BLEND_FRAG) {}
 
 
 void BlendShader::init() {}
@@ -575,12 +578,15 @@ void BlendShader::render(Scene scene, unsigned int gPosition, unsigned int gNorm
 
 void Shader::initShader() {
 
-    geomShader = new GeomShader(GEOM_VERT, GEOM_FRAG);
-    // depthShader = new DepthShader(DEPTH_VERT, DEPTH_FRAG);
-    shadowShader = new ShadowShader(SHADOW_VERT, SHADOW_FRAG);
-    depthBackgroundShader = new DepthBackgroundShader(DEPTHBACKGROUND_VERT, DEPTHBACKGROUND_FRAG);
-    blendShader = new BlendShader(BLEND_VERT, BLEND_FRAG);
-    displayShader = new DisplayShader(DISPLAY_VERT, DISPLAY_FRAG);
+    geomShader = new GeomShader();
+    for(int i = 0; i < 3; i++) {
+        depthShader[i] = new DepthShader;
+        depthBackgroundShader[i] = new DepthBackgroundShader;
+        shadowShader[i] = new ShadowShader;
+    }
+    blendShader = new BlendShader();
+    displayShader = new DisplayShader();
+
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
@@ -620,11 +626,11 @@ void Shader::initShader() {
     cerr<<"geomShader->init(vertices, indices);"<<endl;
     geomShader->init(vertices); 
     cerr<<"depthShader->init();"<<endl;
-    depthShader->init(vertices);
+    depthShader[0]->init(vertices);
     cerr<<"depthBackgroundShader->init();"<<endl;
-    depthBackgroundShader->init();
+    depthBackgroundShader[0]->init();
     cerr<<"shadowShader->init();"<<endl;
-    shadowShader->init();
+    shadowShader[0]->init();
     cerr<<"blendShader->init();"<<endl;
     blendShader->init();
     cerr<<"displayShader->init();"<<endl;
@@ -640,10 +646,10 @@ void Shader::updateShader(Scene scene) {
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
     geomShader->render(scene);
-    depthShader[0].render(scene.light[0]);
-    depthBackgroundShader->render(depthShader->gDepth, depthShader->gDepth2);
-    shadowShader->render(geomShader->gPosition, depthBackgroundShader->gDepth, depthBackgroundShader->gDepth2);
-    blendShader->render(scene, geomShader->gPosition, geomShader->gNormal, geomShader->gColor, shadowShader->gShadow);
+    depthShader[0]->render(scene.light[0]);
+    depthBackgroundShader[0]->render(depthShader[0]->gDepth, depthShader[0]->gDepth2);
+    shadowShader[0]->render(geomShader->gPosition, depthBackgroundShader[0]->gDepth, depthBackgroundShader[0]->gDepth2);
+    blendShader->render(scene, geomShader->gPosition, geomShader->gNormal, geomShader->gColor, shadowShader[0]->gShadow);
     // displayShader->render(shadowShader->gShadow);
 
 }
